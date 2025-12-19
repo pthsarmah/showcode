@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Showcode</title>
+
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
+  <link rel="manifest" href="assets/site.webmanifest">
+
+  <script>
+    window.showToast = (message, duration = 3000) => {
+      let container = document.getElementById('toast-container');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        document.body.appendChild(container);
+      }
+      const toast = document.createElement('div');
+      toast.className = 'toast-notification';
+
+      toast.innerHTML = `
+        <div class="toast-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+        </div>
+        <span>${message}</span>
+    `;
+      container.appendChild(toast);
+      requestAnimationFrame(() => {
+        toast.classList.add('show');
+      });
+      setTimeout(() => {
+        toast.classList.remove('show');
+        toast.addEventListener('transitionend', () => {
+          toast.remove();
+          if (container.children.length === 0) {
+            container.remove();
+          }
+        });
+      }, duration);
+    }
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <link rel="stylesheet" type='text/css' href="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/devicon.min.css" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap"
+    rel="stylesheet">
+
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="styles/overview.css">
+  <link rel="stylesheet" href="styles/flow.css">
+  <link rel="stylesheet" href="styles/alignment.css">
+
+  <script>
+    const renderer = new marked.Renderer();
+    const linkRenderer = renderer.link;
+    renderer.link = (href, title, text) => {
+      const html = linkRenderer.call(renderer, href, title, text);
+      return html.replace(/^<a /, '<a target="_blank" rel="nofollow" ');
+    };
+
+    window.markedRenderer = renderer;
+  </script>
+</head>
+
+<body>
+
+  <div id="hover-tooltip">
+    Lorem ipsum dolor, sit amet consectetur adipisicing elit. Exercitationem, porro?
+  </div>
+
+  <div id="app">
+    <div id="header-container"></div>
+    <div class="tabs-container">
+      <button class="tab-btn active" data-tab="overview">Overview</button>
+      <button class="tab-btn" data-tab="flow">Flow</button>
+      <button class="tab-btn" data-tab="alignment">Alignment</button>
+    </div>
+
+    <div id="overview-view" class="view-section active">
+    </div>
+
+    <div id="flow-view" class="view-section">
+      <div id="flowCanvas">
+        <div class="flow-controls">
+          <button class="btn-action" id="btn-export-flow">Copy Layout</button>
+        </div>
+        <svg class="connections-layer" id="svgLayer"></svg>
+        <div id="nodesContainer"></div>
+      </div>
+    </div>
+
+    <div id="alignment-view" class="view-section">
+    </div>
+  </div>
+
+  <div id="codeModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span class="modal-title" id="modalTitle">Snippet View</span>
+        <button class="close-btn" id="modalCloseBtn">&times;</button>
+      </div>
+      <div class="modal-body" id="modalBody">
+      </div>
+    </div>
+  </div>
+  <script type="module" src="js/main.js"></script>
+  <!-- <script src="sticky.js"></script> -->
+</body>
+
+</html>

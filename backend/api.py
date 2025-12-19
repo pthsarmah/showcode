@@ -1,0 +1,304 @@
+import json
+import logging
+import httpx
+from typing import AsyncGenerator
+
+from typing import Optional
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel, Field
+
+from google import genai
+from google.genai.errors import APIError
+
+from fastapi.middleware.cors import CORSMiddleware
+
+from constants import SYSTEM_PROMPT, SYSTEM_PROMPT_FOR_SNIPPETS, LLAMA_SERVER_URL, MODEL_NAME, MODEL_NAME_FOR_SNIPPETS
+
+import ollama
+
+try:
+    client = ollama.AsyncClient()
+except Exception as e:
+    logging.error(f"Failed to initialize Ollama client: {e}")
+    client = None
+
+try:
+    gclient = genai.Client()
+except Exception as e:
+    logging.error(f"Failed to initialize Gemini client: {e}")
+    gclient = None
+
+app = FastAPI(
+    title="Ollama Code Analysis API",
+    description="An API endpoint to analyze code snippets using the Ollama LLM.",
+    version="1.0.0",
+)
+
+origins = [
+    "http://localhost:5500",
+    "http://127.0.0.1:5500",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,  
+    allow_credentials=True,  
+    allow_methods=["*"],  
+    allow_headers=["*"],  
+)
+
+
+class CodeAnalysisRequest(BaseModel):
+
+    code: str = Field(..., description="The code snippet to be analyzed.")
+    context: Optional[str] = Field(
+        None, description="Optional context about the code's purpose."
+    )
+
+
+@app.post("/analyze_code_llama_server", tags=["Analysis"])
+async def analyze_code_endpoint(request_data: CodeAnalysisRequest):
+
+    user_content = f"CODE SNIPPET:\n---\n{request_data.code}\n---"
+    if request_data.context:
+        user_content += f"\nADDITIONAL CONTEXT:\n---\n{request_data.context}\n---"
+
+    messages = [
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "user", "content": user_content},
+    ]
+
+    payload = {
+        "model": MODEL_NAME,
+        "messages": messages,
+        "stream": True,
+        "temperature": 0.5,
+    }
+
+    async def generate_stream() -> AsyncGenerator[str, None]:
+        async with httpx.AsyncClient(timeout=None) as client:
+            try:
+                async with client.stream(
+                    "POST", LLAMA_SERVER_URL, json=payload
+                ) as response:
+
+                    if response.status_code != 200:
+                        error_msg = await response.aread()
+                        logging.error(f"Llama Server Error: {error_msg.decode()}")
+                        raise HTTPException(
+                            status_code=response.status_code,
+                            detail=f"Llama server returned error: {response.status_code}",
+                        )
+
+                    async for line in response.aiter_lines():
+                        if line.startswith("data: "):
+                            data_str = line[6:]  
+
+                            if data_str.strip() == "[DONE]":
+                                break
+
+                            try:
+                                data_json = json.loads(data_str)
+                                
+                                delta = data_json.get("choices", [{}])[0].get(
+                                    "delta", {}
+                                )
+                                content = delta.get("content", "")
+
+                                if content:
+                                    yield content
+                            except json.JSONDecodeError:
+                                logging.warning(f"Failed to parse JSON line: {line}")
+                                continue
+
+            except httpx.ConnectError:
+                yield "\n[SERVER_ERROR] Could not connect to llama-server at localhost:8080. Is it running?"
+            except Exception as e:
+                logging.error(f"An unexpected error occurred: {e}")
+                yield f"\n[SERVER_ERROR] An unexpected error occurred: {str(e)}"
+
+    return StreamingResponse(generate_stream(), media_type="text/plain")
+
+
+@app.post("/analyze_snippet_llama_server", tags=["Analysis"])
+async def analyze_snippet_llama_server_endpoint(request_data: CodeAnalysisRequest):
+
+    user_content = f"CODE SNIPPET:\n---\n{request_data.code}\n---"
+    if request_data.context:
+        user_content += f"\nADDITIONAL CONTEXT:\n---\n{request_data.context}\n---"
+
+    messages = [
+        {"role": "system", "content": SYSTEM_PROMPT_FOR_SNIPPETS},
+        {"role": "user", "content": user_content},
+    ]
+
+    payload = {
+        "model": MODEL_NAME,
+        "messages": messages,
+        "stream": True,
+        "temperature": 0.5,
+    }
+
+    async def generate_stream() -> AsyncGenerator[str, None]:
+        async with httpx.AsyncClient(timeout=None) as client:
+            try:
+                async with client.stream(
+                    "POST", LLAMA_SERVER_URL, json=payload
+                ) as response:
+
+                    if response.status_code != 200:
+                        error_msg = await response.aread()
+                        logging.error(f"Llama Server Error: {error_msg.decode()}")
+                        raise HTTPException(
+                            status_code=response.status_code,
+                            detail=f"Llama server returned error: {response.status_code}",
+                        )
+
+                    async for line in response.aiter_lines():
+                        if line.startswith("data: "):
+                            data_str = line[6:]  
+
+                            if data_str.strip() == "[DONE]":
+                                break
+
+                            try:
+                                data_json = json.loads(data_str)
+                                
+                                delta = data_json.get("choices", [{}])[0].get(
+                                    "delta", {}
+                                )
+                                content = delta.get("content", "")
+
+                                if content:
+                                    yield content
+                            except json.JSONDecodeError:
+                                logging.warning(f"Failed to parse JSON line: {line}")
+                                continue
+
+            except httpx.ConnectError:
+                yield "\n[SERVER_ERROR] Could not connect to llama-server at localhost:8080. Is it running?"
+            except Exception as e:
+                logging.error(f"An unexpected error occurred: {e}")
+                yield f"\n[SERVER_ERROR] An unexpected error occurred: {str(e)}"
+
+    return StreamingResponse(generate_stream(), media_type="text/plain")
+
+@app.post("/analyze_snippet", tags=["Analysis"])
+async def analyze_snippet_endpoint(request_data: CodeAnalysisRequest):
+    if client is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Ollama client is not initialized. Ensure Ollama is running and accessible.",
+        )
+
+    full_prompt = f"{request_data.code}"
+    
+    async def generate_stream() -> AsyncGenerator[str, None]:
+        try:
+            if client is None:
+                raise HTTPException(
+                    status_code=503,
+                    detail="Ollama service is unavailable.",
+                )
+            
+            stream = await client.generate(
+                model=MODEL_NAME_FOR_SNIPPETS, 
+                prompt=full_prompt, 
+                system=SYSTEM_PROMPT_FOR_SNIPPETS, 
+                stream=True
+            )
+
+            async for chunk in stream:
+                response_text = chunk.get("response", "")
+                if response_text:
+                    
+                    
+                    yield response_text
+                    
+        except Exception as e:
+            logging.error(f"An unexpected error occurred: {e}")
+            yield f"\n[SERVER_ERROR] An unexpected error occurred: {e}"
+
+    return StreamingResponse(
+        generate_stream(), media_type="text/plain" 
+    )
+
+
+@app.post("/analyze_code", tags=["Analysis"])
+async def analyze_code_endpoint(request_data: CodeAnalysisRequest):
+    if client is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Ollama client is not initialized. Ensure Ollama is running and accessible.",
+        )
+
+    full_prompt = f"{request_data.code}"
+    
+    async def generate_stream() -> AsyncGenerator[str, None]:
+        try:
+            if client is None:
+                raise HTTPException(
+                    status_code=503,
+                    detail="Ollama service is unavailable.",
+                )
+            
+            stream = await client.generate(
+                model=MODEL_NAME, 
+                prompt=full_prompt, 
+                system=SYSTEM_PROMPT, 
+                stream=True
+            )
+
+            async for chunk in stream:
+                response_text = chunk.get("response", "")
+                if response_text:
+                    
+                    
+                    yield response_text
+                    
+        except Exception as e:
+            logging.error(f"An unexpected error occurred: {e}")
+            yield f"\n[SERVER_ERROR] An unexpected error occurred: {e}"
+
+    return StreamingResponse(
+        generate_stream(), media_type="text/plain" 
+    )
+
+
+@app.post("/analyze_code_gemini", tags=["Analysis"])
+async def analyze_code_endpoint_gemini(request_data: CodeAnalysisRequest):
+    if gclient is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Gemini client is not initialized. Ensure GEMINI_API_KEY is set.",
+        )
+
+    user_content = f"CODE SNIPPET:\n---\n{request_data.code}\n---"
+    if request_data.context:
+        user_content += f"\nADDITIONAL CONTEXT:\n---\n{request_data.context}\n---"
+
+    async def generate_stream() -> AsyncGenerator[str, None]:
+        try:
+            stream = gclient.models.generate_content_stream(
+                model="gemini-2.5-flash",
+                contents=[user_content],  
+                config=genai.types.GenerateContentConfig(
+                    system_instruction=SYSTEM_PROMPT, response_mime_type="text/plain"
+                ),
+            )
+
+            for chunk in stream:
+                if chunk.text:
+                    yield chunk.text
+
+        except APIError as e:
+            logging.error(f"Gemini API Error: {e}")
+            yield f"\n[API_ERROR] Gemini API Error: The service returned an error. Check your API key and quota status. Details: {e}"
+        except Exception as e:
+            logging.error(f"An unexpected server error occurred: {e}")
+            yield f"\n[SERVER_ERROR] An unexpected error occurred: {e}"
+
+    return StreamingResponse(generate_stream(), media_type="text/plain")
