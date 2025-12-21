@@ -1,0 +1,6 @@
+fastapi==0.126.0
+httpx==0.28.1
+ollama==0.6.1
+protobuf==3.12.4
+pydantic==2.12.5
+uvicorn==0.38.0
