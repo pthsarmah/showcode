@@ -1,5 +1,5 @@
 const apiUrl = 'http://127.0.0.1:8000/analyze_code_llama_server';
-const apiSnippetUrl = 'http://127.0.0.1:8000/analyze_snippet';	
+const apiSnippetUrl = 'http://127.0.0.1:8000/analyze_snippet_llama_server';
 
 export async function callCodeAnalysisApi(codeSnippet, outputEle, firstTokenGeneratedErrands = () => { }, context = null) {
 
@@ -78,7 +78,7 @@ export async function callCodeAnalysisApi(codeSnippet, outputEle, firstTokenGene
 	}
 }
 
-export async function callSnippetAnalysisApi(codeSnippet, outputEle, firstTokenGeneratedErrands = () => {}, context=null) {
+export async function callSnippetAnalysisApi(codeSnippet, outputEle, firstTokenGeneratedErrands = () => { }, context = null) {
 
 	var score = 0;
 	let isFirstTokenGenerated = false;

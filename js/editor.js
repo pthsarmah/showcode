@@ -1,75 +1,104 @@
-import { updateFlowItem, saveConfig } from './flow.js';
+export function initFlowEditor({ container, selectedNodeIds, flowState }) {
 
-const panel = document.getElementById('editor-content');
-const tplNode = document.getElementById('tpl-node-editor');
-const tplEdge = document.getElementById('tpl-edge-editor');
+	const toolbar = document.createElement('div');
+	toolbar.className = 'flow-toolbar';
+	toolbar.id = 'flowEditorToolbar';
 
+	// Start hidden or visible
+	toolbar.style.display = 'none';
 
-export function initEditor() {
+	const renameBtn = document.createElement('button');
+	renameBtn.className = 'toolbar-btn';
+	renameBtn.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+        </svg>
+        Rename
+    `;
 
-    document.getElementById('btn-save-config').addEventListener('click', () => {
-        saveConfig();
+	toolbar.appendChild(renameBtn);
+	container.appendChild(toolbar);
 
-        const btn = document.getElementById('btn-save-config');
-        const originalText = btn.innerText;
-        btn.innerText = "Saved!";
-        btn.style.backgroundColor = "#10b981";
-        setTimeout(() => {
-            btn.innerText = originalText;
-            btn.style.backgroundColor = "";
-        }, 2000);
-    });
+	const observer = new MutationObserver(() => {
+		const hasSelection = container.querySelectorAll('.flow-node.selected').length > 0;
+
+		if (hasSelection) {
+			toolbar.style.display = 'flex';
+		} else {
+			toolbar.style.display = 'none';
+		}
+	});
+
+	observer.observe(container, {
+		subtree: true,
+		attributes: true,
+		attributeFilter: ['class']
+	});
+
+	renameBtn.addEventListener('click', (e) => {
+		e.stopPropagation();
+
+		if (selectedNodeIds.size !== 1) {
+			if (window.showToast) window.showToast("Select exactly one node to rename", "error");
+			return;
+		}
+
+		const nodeId = Array.from(selectedNodeIds)[0];
+		const nodeEl = document.getElementById(nodeId);
+
+		if (nodeEl) {
+			startRenaming(nodeEl, nodeId, flowState);
+		}
+	});
 }
 
+function startRenaming(nodeEl, nodeId, flowState) {
+	const titleEl = nodeEl.querySelector('.node-title');
+	if (!titleEl) return;
 
+	const currentLabel = titleEl.textContent;
 
-export function onSelectionChange(type, item) {
-    panel.innerHTML = '';
+	const input = document.createElement('input');
+	input.type = 'text';
+	input.className = 'node-title-input';
+	input.value = currentLabel;
 
-    if (!item) {
-        panel.innerHTML = `<p class="empty-state">Select a node or connection to edit its properties.</p>`;
-        return;
-    }
+	titleEl.style.display = 'none';
+	titleEl.parentNode.insertBefore(input, titleEl);
 
-    if (type === 'node') {
-        renderNodeEditor(item);
-    } else if (type === 'edge') {
-        renderEdgeEditor(item);
-    }
-}
+	input.focus();
+	input.select();
 
+	input.addEventListener('mousedown', (e) => e.stopPropagation());
 
+	const save = () => {
+		const newLabel = input.value.trim();
 
-function renderNodeEditor(node) {
-    const clone = tplNode.content.cloneNode(true);
-    const inputLabel = clone.getElementById('input-node-label');
-    const inputId = clone.getElementById('input-node-id');
+		if (newLabel) {
+			titleEl.textContent = newLabel;
 
+			const nodeData = flowState.nodes.find(n => n.id === nodeId);
+			if (nodeData) {
+				nodeData.label = newLabel;
+			}
+		}
 
-    inputLabel.value = node.label || "";
-    inputId.value = node.id;
+		input.remove();
+		titleEl.style.display = '';
+	};
 
-    inputLabel.addEventListener('input', (e) => {
-        updateFlowItem('node', node.id, { label: e.target.value });
-    });
+	input.addEventListener('keydown', (e) => {
+		if (e.key === 'Enter') {
+			window.showToast("Node renamed successfully!", "success");
+			save();
+		} else if (e.key === 'Escape') {
+			input.remove();
+			titleEl.style.display = '';
+		}
+	});
 
-    panel.appendChild(clone);
-    inputLabel.focus();
-}
-
-function renderEdgeEditor(edge) {
-    const clone = tplEdge.content.cloneNode(true);
-    const inputLabel = clone.getElementById('input-edge-label');
-
-
-    inputLabel.value = edge.label || "";
-
-
-    inputLabel.addEventListener('input', (e) => {
-
-        updateFlowItem('edge', edge._index, { label: e.target.value });
-    });
-
-    panel.appendChild(clone);
-    inputLabel.focus();
+	input.addEventListener('blur', () => {
+		save();
+	});
 }

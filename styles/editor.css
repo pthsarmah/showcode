@@ -1,136 +1,77 @@
-
-.editor-panel {
-    margin-top: 20px;
-    background: #ffffff;
+.flow-toolbar {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(0);
+    background: var(--card-bg);
     border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-    animation: slideUp 0.3s ease-out;
-}
-
-@keyframes slideUp {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.editor-header {
+    padding: 6px;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 15px;
-    margin-bottom: 15px;
-}
-
-.editor-header h3 {
-    margin: 0;
-    font-size: 1.1rem;
-    color: var(--text-main);
-    font-weight: 700;
-}
-
-.btn-primary {
-    background: var(--text-main);
-    color: #fff;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 6px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-
-.btn-primary:hover {
-    background: #000;
-}
-
-
-.editor-content {
-    min-height: 80px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-
-.empty-state {
-    color: var(--text-sub);
-    font-style: italic;
-    text-align: center;
-    margin: 0;
-}
-
-.form-group {
-    display: flex;
-    flex-direction: column;
     gap: 8px;
-    margin-bottom: 15px;
-    max-width: 400px;
+    z-index: 100;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    opacity: 1;
 }
 
-.form-group label {
+/* Hide toolbar when nothing is selected (optional utility class) */
+.flow-toolbar.hidden {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+    pointer-events: none;
+}
+
+/* Toolbar Buttons */
+.toolbar-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-main);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-family: "Space Grotesk", sans-serif;
     font-size: 0.85rem;
     font-weight: 600;
-    color: var(--text-sub);
-    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s ease;
 }
 
-.form-group input {
-    padding: 10px 12px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
+.toolbar-btn:hover {
+    background: var(--bg-color);
+    border-color: var(--border);
+}
+
+.toolbar-btn:active {
+    background: #e2e8f0;
+    transform: translateY(1px);
+}
+
+.toolbar-btn svg {
+    width: 16px;
+    height: 16px;
+    stroke: var(--text-sub);
+}
+
+.toolbar-btn:hover svg {
+    stroke: var(--primary);
+}
+
+/* Inline Rename Input */
+.node-title-input {
     font-family: inherit;
-    font-size: 0.95rem;
-    color: var(--text-main);
-    background: #f8fafc;
-    transition: border-color 0.2s;
-}
-
-.form-group input:focus {
-    outline: none;
-    border-color: var(--primary);
-    background: #fff;
-}
-
-.input-disabled {
-    background: #e2e8f0 !important;
-    color: var(--text-sub) !important;
-    cursor: not-allowed;
-}
-
-
-
-
-.flow-node.selected {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2), 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    z-index: 10; 
-}
-
-
-.connection-path {
-    cursor: pointer;
-}
-
-.connection-path:hover {
-    stroke: var(--primary);
-    opacity: 0.8;
-}
-
-.connection-path.selected {
-    stroke: var(--primary);
-    opacity: 1;
-    stroke-width: 3px;
-    filter: drop-shadow(0 0 3px rgba(59, 130, 246, 0.4));
-}
-
-
-.connection-label {
-    cursor: pointer;
-    transition: fill 0.2s;
-    user-select: none;
-}
-.connection-label.selected {
-    fill: var(--primary);
+    font-size: 0.9rem;
     font-weight: 700;
+    color: var(--text-main);
+    background: var(--bg-color);
+    border: 1px solid var(--primary);
+    border-radius: 4px;
+    padding: 2px 4px;
+    width: 100%;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    margin: -3px -5px; /* Offset to align perfectly with text */
+    pointer-events: auto; /* Ensure input receives clicks */
 }

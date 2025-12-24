@@ -36,9 +36,6 @@ body {
 	flex-direction: column;
 }
 
-
-
-
 #header-container,
 .tabs-container,
 #overview-view,
@@ -307,9 +304,7 @@ body {
 .toast-notification {
 	pointer-events: auto;
 	background: var(--card-bg);
-	color: var(--text-main);
-	border: 1px solid var(--border);
-	border-left: 4px solid var(--primary);
+	color: var(--text-main);	
 	padding: 12px 20px;
 	border-radius: 8px;
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -327,6 +322,21 @@ body {
 	transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 
 	flex-shrink: 0;
+}
+
+.toast-notification.info {
+	border: 1px solid var(--border);
+	border-left: 4px solid var(--primary);
+}
+
+.toast-notification.success {
+	border: 1px solid #10b981;
+	border-left: 4px solid #10b981;
+}
+
+.toast-notification.error {
+	border: 1px solid #ef4444;
+	border-left: 4px solid #ef4444;
 }
 
 .toast-notification.show {

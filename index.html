@@ -12,7 +12,7 @@
   <link rel="manifest" href="assets/site.webmanifest">
 
   <script>
-    window.showToast = (message, duration = 3000) => {
+    window.showToast = (message, type="info", duration = 3000) => {
       let container = document.getElementById('toast-container');
       if (!container) {
         container = document.createElement('div');
@@ -21,15 +21,9 @@
       }
       const toast = document.createElement('div');
       toast.className = 'toast-notification';
+			toast.classList.add(type);
 
-      toast.innerHTML = `
-        <div class="toast-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="20 6 9 17 4 12"></polyline>
-            </svg>
-        </div>
-        <span>${message}</span>
-    `;
+      toast.innerHTML = `<span>${message}</span>`;
       container.appendChild(toast);
       requestAnimationFrame(() => {
         toast.classList.add('show');
@@ -61,6 +55,8 @@
   <link rel="stylesheet" href="styles/overview.css">
   <link rel="stylesheet" href="styles/flow.css">
   <link rel="stylesheet" href="styles/alignment.css">
+	<link rel="stylesheet" href="styles/editor.css">
+	<link rel="stylesheet" href="styles/settings.css">
 
   <script>
     const renderer = new marked.Renderer();
@@ -80,15 +76,25 @@
     Lorem ipsum dolor, sit amet consectetur adipisicing elit. Exercitationem, porro?
   </div>
 
+	<button class="tab-btn" data-tab="settings">
+		<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+		  <circle cx="12" cy="12" r="3"></circle>
+		  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z"></path>
+		</svg>
+	</button>
+
   <div id="app">
     <div id="header-container"></div>
     <div class="tabs-container">
       <button class="tab-btn active" data-tab="overview">Overview</button>
       <button class="tab-btn" data-tab="flow">Flow</button>
-      <button class="tab-btn" data-tab="alignment">Alignment</button>
+      <button class="tab-btn" data-tab="alignment">Alignment</button>	
     </div>
 
     <div id="overview-view" class="view-section active">
+    </div>
+
+    <div id="settings-view" class="view-section">
     </div>
 
     <div id="flow-view" class="view-section">
@@ -116,7 +122,7 @@
     </div>
   </div>
   <script type="module" src="js/main.js"></script>
-  <!-- <script src="sticky.js"></script> -->
+	<!-- <script src="dx-tools/sticky.js"></script> --!>
 </body>
 
 </html>

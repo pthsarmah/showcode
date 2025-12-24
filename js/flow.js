@@ -1,10 +1,12 @@
+import { initFlowEditor } from './editor.js';
+
 let flowState = { nodes: [], edges: [] };
 
 
 let selectedNodeIds = new Set();
 let isSelecting = false;
-let selectionStart = { x: 0, y: 0 }; 
-let selectionRect = { x: 0, y: 0, width: 0, height: 0 }; 
+let selectionStart = { x: 0, y: 0 };
+let selectionRect = { x: 0, y: 0, width: 0, height: 0 };
 
 
 let isDraggingNode = false;
@@ -45,17 +47,16 @@ export function initFlow(flowData) {
 
 	const canvas = document.getElementById('flowCanvas');
 
-	
 	viewX = canvas.offsetWidth / 2;
 	viewY = canvas.offsetHeight / 2;
 
-	
+
 	document.getElementById('nodesContainer').style.transformOrigin = '0 0';
 
-	
+
 	const svgLayer = document.getElementById('svgLayer');
 
-	
+
 	if (!document.getElementById('selection-marquee')) {
 		const marquee = document.createElement('div');
 		marquee.id = 'selection-marquee';
@@ -71,17 +72,21 @@ export function initFlow(flowData) {
         <g id="edgeGroup"></g> 
     `;
 
-	
+
 	renderNodes();
 	drawEdges();
 	updateView();
 
-	
-	
+	initFlowEditor({
+		container: canvas,
+		selectedNodeIds: selectedNodeIds,
+		flowState: flowState
+	});
+
 	canvas.addEventListener('mousedown', handleCanvasMouseDown);
 	canvas.addEventListener('wheel', onWheel, { passive: false });
 
-	
+
 	document.addEventListener('mousemove', onGlobalMouseMove);
 	document.addEventListener('mouseup', onGlobalMouseUp);
 
@@ -112,7 +117,7 @@ function renderNodes() {
 
 		el.id = node.id;
 
-		
+
 		node.x = node.x !== undefined && node.x !== null ? node.x : Math.floor(Math.random() * (maxX - minX + 1)) + minX;
 		node.y = node.y !== undefined && node.y !== null ? node.y : Math.floor(Math.random() * (maxY - minY + 1)) + minY;
 
@@ -134,7 +139,7 @@ function renderNodes() {
         `;
 
 		el.addEventListener('mousedown', (e) => {
-			e.stopPropagation(); 
+			e.stopPropagation();
 			startDragNode(e, node);
 		});
 
@@ -162,12 +167,12 @@ function drawEdges() {
 		return el ? el.offsetWidth : 220;
 	};
 
-	
+
 	const getDirection = (sNode, tNode) => {
 		const right = [1, 0];
 		const width = getElWidth(tNode.id);
 		const dir = [tNode.x - (sNode.x + width), tNode.y - sNode.y];
-		
+
 		return right[0] * dir[0] + right[1] * dir[1];
 	}
 
@@ -183,7 +188,7 @@ function drawEdges() {
 
 			const dot = getDirection(sNode, tNode);
 
-			
+
 			const startX = dot <= 0 ? sNode.x + sWidth / 2 : sNode.x + sWidth;
 			const startY = dot <= 0 ? sNode.y + sHeight : sNode.y + (sHeight / 2);
 			const endX = dot <= 0 ? tNode.x + tWidth / 2 : tNode.x;
@@ -233,13 +238,13 @@ function updateView() {
 function handleCanvasMouseDown(e) {
 	if (e.target.id !== 'flowCanvas' && e.target.nodeName !== 'svg') return;
 
-	
+
 	if (e.shiftKey) {
 		startMarquee(e);
 	}
-	
+
 	else {
-		
+
 		clearSelection();
 		startPan(e);
 	}
@@ -305,9 +310,9 @@ function stopPan() {
 
 
 function startDragNode(e, node) {
-	
-	
-	
+
+
+
 	if (!selectedNodeIds.has(node.id)) {
 		if (!e.shiftKey) {
 			clearSelection();
@@ -317,8 +322,8 @@ function startDragNode(e, node) {
 
 	isDraggingNode = true;
 
-	
-	
+
+
 	const canvasRect = document.getElementById('flowCanvas').getBoundingClientRect();
 	const mouseX = e.clientX - canvasRect.left;
 	const mouseY = e.clientY - canvasRect.top;
@@ -347,7 +352,7 @@ function onDragNode(e) {
 	const mouseWorldX = (mouseX - viewX) / scale;
 	const mouseWorldY = (mouseY - viewY) / scale;
 
-	
+
 	selectedNodeIds.forEach(id => {
 		const node = flowState.nodes.find(n => n.id === id);
 		const offset = dragOffsets.get(id);
@@ -356,14 +361,14 @@ function onDragNode(e) {
 			let newX = mouseWorldX - offset.offsetX;
 			let newY = mouseWorldY - offset.offsetY;
 
-			
+
 			newX = Math.round(newX / 10) * 10;
 			newY = Math.round(newY / 10) * 10;
 
 			node.x = newX;
 			node.y = newY;
 
-			
+
 			const el = document.getElementById(node.id);
 			if (el) {
 				el.style.left = `${newX}px`;
@@ -387,7 +392,7 @@ function startMarquee(e) {
 	isSelecting = true;
 	const canvasRect = document.getElementById('flowCanvas').getBoundingClientRect();
 
-	
+
 	selectionStart = {
 		x: e.clientX - canvasRect.left,
 		y: e.clientY - canvasRect.top
@@ -407,20 +412,20 @@ function onMarqueeDrag(e) {
 	const currentX = e.clientX - canvasRect.left;
 	const currentY = e.clientY - canvasRect.top;
 
-	
+
 	const x = Math.min(selectionStart.x, currentX);
 	const y = Math.min(selectionStart.y, currentY);
 	const width = Math.abs(currentX - selectionStart.x);
 	const height = Math.abs(currentY - selectionStart.y);
 
-	
+
 	const marquee = document.getElementById('selection-marquee');
 	marquee.style.left = x + 'px';
 	marquee.style.top = y + 'px';
 	marquee.style.width = width + 'px';
 	marquee.style.height = height + 'px';
 
-	
+
 	selectionRect = { x, y, width, height };
 }
 
@@ -428,21 +433,21 @@ function stopMarquee() {
 	isSelecting = false;
 	document.getElementById('selection-marquee').style.display = 'none';
 
-	
-	
+
+
 	const worldLeft = (selectionRect.x - viewX) / scale;
 	const worldTop = (selectionRect.y - viewY) / scale;
 	const worldRight = (selectionRect.x + selectionRect.width - viewX) / scale;
 	const worldBottom = (selectionRect.y + selectionRect.height - viewY) / scale;
 
-	
+
 	flowState.nodes.forEach(node => {
 		const nodeEl = document.getElementById(node.id);
 		const nodeW = nodeEl.offsetWidth;
 		const nodeH = nodeEl.offsetHeight;
 
-		
-		
+
+
 		if (
 			node.x < worldRight &&
 			(node.x + nodeW) > worldLeft &&
@@ -462,7 +467,7 @@ function onNodeHoverPositionTooltipEnter(e) {
 
 	hoverTooltip.innerHTML = `${e.target.dataset.info}`
 
-	if(timeout) clearTimeout(timeout);
+	if (timeout) clearTimeout(timeout);
 }
 
 function onNodeHoverPositionTooltipLeave(e) {

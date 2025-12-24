@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>showcode - Visual Code Architecture</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles/landing.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+						<!-- <img class="logo-icon" src="assets/showcode_logo.png"></img> --!>
+                <img class="logo-icon" src="assets/showcode_wm.svg"></img>
+            </div>
+            <div class="nav-links">
+                <a href="#features" class="nav-item">Features</a>
+                <a href="#alignment" class="nav-item">Documentation</a>
+                <a href="#" class="btn-primary">Get Started</a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero-section">
+        <div class="bg-grid"></div>
+        
+        <svg class="hero-flow-lines" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+            <path class="connection-path" d="M -100 200 Q 400 50 800 300 T 1600 100" />
+            <path class="connection-path delayed" d="M -100 400 Q 500 600 1000 300 T 2000 500" />
+        </svg>
+
+        <div class="container hero-content">
+            <div class="hero-text">
+                <div class="pill-badge">v2.0 Now Available</div>
+                <h1 class="hero-title">Orchestrate your <span class="highlight">Code Structure</span> visually.</h1>
+                <p class="hero-subtitle">
+                    Bridge the gap between architecture and implementation. Visualize flows, align snippets, and maintain industry standards in one unified dashboard.
+                </p>
+                <div class="hero-actions">
+                    <button class="btn-primary large">Launch Dashboard</button>
+                    <button class="btn-secondary large">View Documentation</button>
+                </div>
+            </div>
+
+            <div class="hero-visual">
+                <div class="mockup-window">
+                    <div class="mockup-header">
+                        <div class="dots">
+                            <span></span><span></span><span></span>
+                        </div>
+                        <div class="mockup-tabs">
+                            <div class="mock-tab active">flow.js</div>
+                            <div class="mock-tab">style.css</div>
+                        </div>
+                    </div>
+                    <div class="mockup-body">
+                        <div class="flow-node" style="top: 40px; left: 40px;">
+                            <div class="node-header">
+                                <span class="node-title">Auth_Handler</span>
+                            </div>
+                        </div>
+                        <div class="flow-node process" style="top: 150px; left: 180px;">
+                            <div class="node-header">
+                                <span class="node-title">Validate_Token</span>
+                            </div>
+                        </div>
+                         <div class="mock-connector"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section id="features" class="section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Designed for Architects</h2>
+                <p>Everything you need to maintain code integrity.</p>
+            </div>
+
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon process">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+                    </div>
+                    <h3>Visual Flow Editor</h3>
+                    <p>Map out logic branches using our intuitive node-based editor. Drag, drop, and connect components seamlessly.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon start">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+                    </div>
+                    <h3>Industry Alignment</h3>
+                    <p>Compare your snippets against industry standards. Get a mean alignment score and optimize instantly.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon end">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                    </div>
+                    <h3>Code Overview</h3>
+                    <p>Analyze complexity across your entire codebase. Toggle between overview and alignment views instantly.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section alt-bg">
+        <div class="container split-layout">
+            <div class="text-block">
+                <h2>Intelligent Analysis</h2>
+                <p>Our engine parses your repository and highlights deviations from best practices using specific color-coded markers consistent with your workflow.</p>
+                
+                <div class="stat-row">
+                    <div class="stat-item">
+                        <div class="stat-value">98%</div>
+                        <div class="stat-label">Accuracy</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">< 100ms</div>
+                        <div class="stat-label">Parse Time</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="code-preview">
+                <div class="code-header">
+                    <span class="dot red"></span>
+                    <span class="dot yellow"></span>
+                    <span class="dot green"></span>
+                </div>
+                <pre><code><span class="kw">function</span> <span class="fn">analyzeCode</span>(snippet) {
+  <span class="kw">const</span> alignment = <span class="obj">Industry</span>.check(snippet);
+  
+  <span class="comment">// Returns alignment score</span>
+  <span class="kw">if</span> (alignment.score > <span class="num">0.9</span>) {
+    <span class="kw">return</span> <span class="str">"Optimal"</span>;
+  }
+  
+  <span class="kw">return</span> <span class="str">"Refactor Needed"</span>;
+}</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="cta-box">
+                <h2>Ready to streamline your workflow?</h2>
+                <button class="btn-primary large">Start Project</button>
+            </div>
+            <div class="footer-links">
+                <span>© 2025 Showcode</span>
+                <div class="links">
+                    <a href="#">Privacy</a>
+                    <a href="#">Terms</a>
+                    <a href="#">Github</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

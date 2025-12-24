@@ -125,18 +125,16 @@ async def analyze_code_endpoint(request_data: CodeAnalysisRequest):
 
 @app.post("/analyze_snippet_llama_server", tags=["Analysis"])
 async def analyze_snippet_llama_server_endpoint(request_data: CodeAnalysisRequest):
-
-    user_content = f"CODE SNIPPET:\n---\n{request_data.code}\n---"
-    if request_data.context:
-        user_content += f"\nADDITIONAL CONTEXT:\n---\n{request_data.context}\n---"
+ 
+    full_prompt = f"{request_data.code}"
 
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT_FOR_SNIPPETS},
-        {"role": "user", "content": user_content},
+        {"role": "user", "content": full_prompt},
     ]
 
     payload = {
-        "model": MODEL_NAME,
+        "model": MODEL_NAME_FOR_SNIPPETS,
         "messages": messages,
         "stream": True,
         "temperature": 0.5,

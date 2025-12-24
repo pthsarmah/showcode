@@ -1,0 +1,529 @@
+/* Reusing variables from main.css */
+:root {
+    --primary: #3b82f6;
+    --primary-hover: #2563eb;
+    --text-main: #1e293b;
+    --text-sub: #64748b;
+    --border: #e2e8f0;
+    --bg-color: #f4f6f8;
+    --card-bg: #ffffff;
+    --grid-dot: #cbd5e1;
+    --success: #10b981;
+    --danger: #ef4444;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: "Space Grotesk", sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    overflow-x: hidden;
+}
+
+/* --- Layout Utilities --- */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.section {
+    padding: 100px 0;
+}
+
+.alt-bg {
+    background-color: #fff;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+}
+
+/* --- Navigation --- */
+.navbar {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+}
+
+.nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 800;
+    font-size: 1.2rem;
+}
+
+.logo-icon {
+		width: 200px;
+}
+
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+}
+
+.nav-item {
+    text-decoration: none;
+    color: var(--text-sub);
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: color 0.2s;
+}
+
+.nav-item:hover {
+    color: var(--primary);
+}
+
+/* --- Buttons (Derived from btn-action in main.css) --- */
+.btn-primary {
+    background: var(--text-main);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-family: "Space Grotesk", sans-serif;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.btn-primary:hover {
+    background: var(--primary);
+    transform: translateY(-2px);
+}
+
+.btn-primary.large {
+    padding: 14px 28px;
+    font-size: 1.1rem;
+}
+
+.btn-secondary {
+    background: transparent;
+    color: var(--text-main);
+    border: 1px solid var(--border);
+    padding: 14px 28px;
+    border-radius: 8px;
+    font-family: "Space Grotesk", sans-serif;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-secondary.large {
+    padding: 14px 28px;
+    font-size: 1.1rem;
+}
+
+.btn-secondary:hover {
+    background: #fff;
+    border-color: var(--text-main);
+}
+
+/* --- Hero Section --- */
+.hero-section {
+    position: relative;
+    padding: 160px 0 100px;
+    overflow: hidden;
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+}
+
+/* Reusing grid dot pattern from flow.css */
+.bg-grid {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: radial-gradient(var(--grid-dot) 1px, transparent 1px);
+    background-size: 20px 20px;
+    z-index: -2;
+    mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+}
+
+.hero-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: center;
+}
+
+.hero-title {
+    font-size: 3.5rem;
+    line-height: 1.1;
+    font-weight: 800;
+    margin-bottom: 20px;
+    letter-spacing: -1px;
+		text-wrap: balance;
+}
+
+.highlight {
+    color: var(--primary);
+}
+
+.hero-subtitle {
+    color: var(--text-sub);
+    font-size: 1.2rem;
+    line-height: 1.6;
+    margin-bottom: 30px;
+    max-width: 90%;
+		text-wrap: balance;
+}
+
+.hero-actions {
+    display: flex;
+    gap: 15px;
+}
+
+.pill-badge {
+    display: inline-block;
+    background: #eff6ff;
+    color: var(--primary);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+/* --- Hero Visual (Mockup) --- */
+.hero-visual {
+    perspective: 1000px;
+}
+
+.mockup-window {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 20px 40px -10px rgba(0,0,0,0.1);
+    height: 400px;
+    position: relative;
+    overflow: hidden;
+    transform: rotateY(-5deg) rotateX(5deg);
+    transition: transform 0.3s ease;
+    animation: popIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; /* Reusing animation logic from main.css */
+}
+
+.mockup-window:hover {
+    transform: rotateY(0deg) rotateX(0deg);
+}
+
+.mockup-header {
+    background: #f8fafc;
+    border-bottom: 1px solid var(--border);
+    padding: 10px 15px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.dots {
+    display: flex;
+    gap: 6px;
+}
+
+.dots span {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--border);
+}
+
+.mock-tab {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.8rem;
+    color: var(--text-sub);
+    padding: 4px 10px;
+    border-radius: 4px;
+}
+
+.mock-tab.active {
+    background: #fff;
+    color: var(--text-main);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.mockup-body {
+    position: relative;
+    height: 100%;
+    /* Reusing grid pattern inside mockup */
+    background-image: radial-gradient(var(--grid-dot) 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+/* Simplified Flow Node for Landing Page */
+.flow-node {
+    position: absolute;
+    width: 120px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border-bottom: 4px solid var(--success);
+    padding: 10px;
+    animation: fadeIn 0.5s ease-out forwards;
+}
+
+.flow-node.process {
+    border-color: var(--primary);
+    animation-delay: 0.2s;
+}
+
+.node-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.mock-connector {
+    position: absolute;
+    top: 75px;
+    left: 100px;
+    width: 140px;
+    height: 80px;
+    border-left: 2px dashed var(--text-sub);
+    border-bottom: 2px dashed var(--text-sub);
+    border-radius: 0 0 0 20px;
+    opacity: 0.3;
+    z-index: -1;
+}
+
+/* --- Features Grid --- */
+.section-header {
+    text-align: center;
+    margin-bottom: 60px;
+}
+
+.section-header h2 {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+}
+
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+}
+
+.feature-card {
+    background: var(--card-bg);
+    padding: 30px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+    border-color: var(--primary);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+}
+
+.feature-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    color: white;
+}
+
+/* Matching node colors from flow.css */
+.feature-icon.process { background: var(--primary); }
+.feature-icon.start { background: var(--success); }
+.feature-icon.end { background: var(--danger); }
+
+.feature-icon svg {
+    width: 24px;
+    height: 24px;
+}
+
+.feature-card h3 {
+    font-size: 1.3rem;
+    margin-bottom: 10px;
+}
+
+.feature-card p {
+    color: var(--text-sub);
+    line-height: 1.6;
+}
+
+/* --- Code Preview Section --- */
+.split-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: center;
+}
+
+.stat-row {
+    display: flex;
+    gap: 40px;
+    margin-top: 30px;
+    padding-top: 30px;
+    border-top: 1px solid var(--border);
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--primary);
+}
+
+.stat-label {
+    color: var(--text-sub);
+    font-size: 0.9rem;
+}
+
+.code-preview {
+    background: #1e293b; /* Using dark text color for bg */
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+}
+
+.code-header {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.dot.red { background: #ef4444; }
+.dot.yellow { background: #f59e0b; }
+.dot.green { background: #10b981; }
+
+pre {
+    color: #e2e8f0;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.9rem;
+    overflow-x: auto;
+}
+
+/* Syntax Highlighting manual styles */
+.kw { color: #c678dd; }
+.fn { color: #61afef; }
+.str { color: #98c379; }
+.num { color: #d19a66; }
+.comment { color: #5c6370; font-style: italic; }
+.obj { color: #e5c07b; }
+
+/* --- Footer --- */
+.footer {
+    padding: 80px 0 40px;
+    text-align: center;
+}
+
+.cta-box {
+    margin-bottom: 80px;
+}
+
+.cta-box h2 {
+    font-size: 2.5rem;
+    margin-bottom: 30px;
+}
+
+.footer-links {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--text-sub);
+    font-size: 0.9rem;
+    border-top: 1px solid var(--border);
+    padding-top: 30px;
+}
+
+.links {
+    display: flex;
+    gap: 20px;
+}
+
+.links a {
+    color: var(--text-sub);
+    text-decoration: none;
+}
+
+.links a:hover {
+    color: var(--primary);
+}
+
+/* --- Animated SVG Background Lines --- */
+/* Derived from flow.css animation */
+.hero-flow-lines {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.3;
+}
+
+.connection-path {
+    fill: none;
+    stroke: var(--primary);
+    stroke-width: 2px;
+    stroke-dasharray: 10, 10;
+    animation: flowAnimation 60s linear infinite; /* Slowed down for background */
+}
+
+.connection-path.delayed {
+    stroke: var(--text-sub);
+    animation-direction: reverse;
+    opacity: 0.2;
+}
+
+@keyframes flowAnimation {
+    from { stroke-dashoffset: 500; }
+    to { stroke-dashoffset: 0; }
+}
+
+@keyframes popIn {
+    from { opacity: 0; transform: scale(0.9) rotateY(-5deg); }
+    to { opacity: 1; transform: scale(1) rotateY(-5deg); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .hero-content, .split-layout {
+        grid-template-columns: 1fr;
+        gap: 40px;
+    }
+
+    .hero-title { font-size: 2.5rem; }
+    
+    .nav-links { display: none; } /* Simplified for example */
+    
+    .mockup-window { height: 300px; }
+}

@@ -1,146 +1,146 @@
 {
 	"project": "Open AI Hackathon Local AI Chat",
 	"flow": {
-		"nodes": [
-			{
-				"id": "ev_listener_mouse",
-				"label": "Event Listener (Mouse)",
-				"x": -810,
-				"y": -130,
-				"info": "Listens to mouse events (clicks, drags)",
-				"type": "start",
-				"linkedDataIndex": 0
-			},
-			{
-				"id": "ev_listener_keyboard",
-				"label": "Event Listener (Keyboard)",
-				"x": -810,
-				"y": -60,
-				"info": "Captures keystrokes and shortcut combinations",
-				"type": "start"
-			},
-			{
-				"id": "ev_listener_process",
-				"label": "Event Listener (Process)",
-				"x": -810,
-				"y": 30,
-				"info": "Monitors active window titles and process IDs",
-				"type": "start"
-			},
-			{
-				"id": "data_ingester",
-				"label": "Data Ingester",
-				"x": -400,
-				"y": -130,
-				"info": "Aggregates, filters, and normalizes raw event streams",
-				"type": "process"
-			},
-			{
-				"id": "sqlite_store",
-				"label": "Data Store (SQLite)",
-				"x": -100,
-				"y": -30,
-				"info": "Persists structured event logs on the local disk",
-				"type": "end"
-			},
-			{
-				"id": "api_backend",
-				"label": "API Backend (FastAPI)",
-				"x": 170,
-				"y": -250,
-				"info": "Orchestrates data flow and serves endpoints"
-			},
-			{
-				"id": "ev_fetcher",
-				"label": "Event Fetcher",
-				"x": 500,
-				"y": -90,
-				"info": "Retrieves relevant historical context from storage",
-				"type": "start"
-			},
-			{
-				"id": "prompt_builder",
-				"label": "Prompt Builder",
-				"x": 500,
-				"y": 0,
-				"info": "Constructs context-aware system prompts for the AI",
-				"type": "start"
-			},
-			{
-				"id": "ai_inference",
-				"label": "AI Inference",
-				"x": 500,
-				"y": 90,
-				"info": "Manages inference logic and token generation",
-				"type": "start"
-			},
-			{
-				"id": "gpt_local_model",
-				"label": "gpt-oss-20B Locally Hosted",
-				"x": 500,
-				"y": 200,
-				"info": "Executes the 20B parameter model weights locally",
-				"type": "end"
-			},
-			{
-				"id": "frontend_client",
-				"label": "Frontend Client",
-				"x": -400,
-				"y": -250,
-				"info": "User dashboard for visualization and queries",
-				"type": "process"
-			}
-		],
-		"edges": [
-			{
-				"from": "ev_listener_mouse",
-				"to": "data_ingester",
-				"label": "Event Raw Data"
-			},
-			{
-				"from": "ev_listener_keyboard",
-				"to": "data_ingester",
-				"label": "Event Raw Data"
-			},
-			{
-				"from": "ev_listener_process",
-				"to": "data_ingester",
-				"label": "Event Raw Data"
-			},
-			{
-				"from": "data_ingester",
-				"to": "sqlite_store",
-				"label": "Structure & Store"
-			},
-			{
-				"from": "sqlite_store",
-				"to": "api_backend",
-				"label": "Fetch events"
-			},
-			{
-				"from": "api_backend",
-				"to": "ev_fetcher",
-				"label": "Send fetched events"
-			},
-			{
-				"from": "ev_fetcher",
-				"to": "prompt_builder"
-			},
-			{
-				"from": "prompt_builder",
-				"to": "ai_inference"
-			},
-			{
-				"from": "ai_inference",
-				"to": "gpt_local_model"
-			},
-			{
-				"from": "frontend_client",
-				"to": "api_backend",
-				"label": "GET /summarize"
-			}
-		]
-	},
+  "nodes": [
+    {
+      "id": "ev_listener_mouse",
+      "label": "Event Listener (Mouse)",
+      "x": -810,
+      "y": -130,
+      "info": "Listens to mouse events (clicks, drags)",
+      "type": "start",
+      "linkedDataIndex": 0
+    },
+    {
+      "id": "ev_listener_keyboard",
+      "label": "Event Listener (Keyboard)",
+      "x": -810,
+      "y": -60,
+      "info": "Captures keystrokes and shortcut combinations",
+      "type": "start"
+    },
+    {
+      "id": "ev_listener_process",
+      "label": "Event Listener (Process)",
+      "x": -810,
+      "y": 30,
+      "info": "Monitors active window titles and process IDs",
+      "type": "start"
+    },
+    {
+      "id": "data_ingester",
+      "label": "Data Ingester",
+      "x": -400,
+      "y": -130,
+      "info": "Aggregates, filters, and normalizes raw event streams",
+      "type": "process"
+    },
+    {
+      "id": "sqlite_store",
+      "label": "SQLite Data Store",
+      "x": -100,
+      "y": -30,
+      "info": "Persists structured event logs on the local disk",
+      "type": "end"
+    },
+    {
+      "id": "api_backend",
+      "label": "API Backend (FastAPI)",
+      "x": 170,
+      "y": -250,
+      "info": "Orchestrates data flow and serves endpoints"
+    },
+    {
+      "id": "ev_fetcher",
+      "label": "Event Fetcher",
+      "x": 500,
+      "y": -90,
+      "info": "Retrieves relevant historical context from storage",
+      "type": "start"
+    },
+    {
+      "id": "prompt_builder",
+      "label": "Prompt Builder",
+      "x": 500,
+      "y": 0,
+      "info": "Constructs context-aware system prompts for the AI",
+      "type": "start"
+    },
+    {
+      "id": "ai_inference",
+      "label": "AI Inference",
+      "x": 500,
+      "y": 90,
+      "info": "Manages inference logic and token generation",
+      "type": "start"
+    },
+    {
+      "id": "gpt_local_model",
+      "label": "gpt-oss-20B Locally Hosted",
+      "x": 500,
+      "y": 200,
+      "info": "Executes the 20B parameter model weights locally",
+      "type": "end"
+    },
+    {
+      "id": "frontend_client",
+      "label": "Frontend Client",
+      "x": -400,
+      "y": -250,
+      "info": "User dashboard for visualization and queries",
+      "type": "process"
+    }
+  ],
+  "edges": [
+    {
+      "from": "ev_listener_mouse",
+      "to": "data_ingester",
+      "label": "Event Raw Data"
+    },
+    {
+      "from": "ev_listener_keyboard",
+      "to": "data_ingester",
+      "label": "Event Raw Data"
+    },
+    {
+      "from": "ev_listener_process",
+      "to": "data_ingester",
+      "label": "Event Raw Data"
+    },
+    {
+      "from": "data_ingester",
+      "to": "sqlite_store",
+      "label": "Structure & Store"
+    },
+    {
+      "from": "sqlite_store",
+      "to": "api_backend",
+      "label": "Fetch events"
+    },
+    {
+      "from": "api_backend",
+      "to": "ev_fetcher",
+      "label": "Send fetched events"
+    },
+    {
+      "from": "ev_fetcher",
+      "to": "prompt_builder"
+    },
+    {
+      "from": "prompt_builder",
+      "to": "ai_inference"
+    },
+    {
+      "from": "ai_inference",
+      "to": "gpt_local_model"
+    },
+    {
+      "from": "frontend_client",
+      "to": "api_backend",
+      "label": "GET /summarize"
+    }
+  ]
+},
 	"data": [
 		{
 			"title": "Event Collection",
