@@ -2,7 +2,7 @@
   <img src="assets/showcode_wm.png">
 </div>
 
-# showcode (WIP) - A better alternative (than bland Github repos) for pure-code projects in your resume.
+# showcode (WIP) - A better alternative for pure-code projects in your resume.
 
 ### [Cool Demo Video!](https://www.youtube.com/watch?v=DKFLb5ORMfY)
 
