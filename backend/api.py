@@ -2,11 +2,11 @@ from functools import lru_cache
 import json
 import logging
 import httpx
-from typing import Annotated, AsyncGenerator, Dict, List
+from typing import AsyncGenerator, Dict, List
 
 from typing import Optional
-from fastapi import Depends, FastAPI, HTTPException, Response
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi import FastAPI, HTTPException, Header, Request
+from fastapi.responses import FileResponse, RedirectResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
 from google import genai
@@ -71,7 +71,25 @@ class APIKeyPayload(BaseModel):
 def get_settings():
     return config.Settings()
 
-@app.post("/analyze_code_llama_server", tags=["Analysis"])
+@app.post("/analyze", tags=["Proxy Route"])
+async def proxy_via_headers(request: Request):
+
+    useLocalProvider = True if request.headers["x-use-local-provider"] == 'true' else False
+    useSnippetModel = True if request.headers["x-use-snippet-model"] == 'true' else False
+    defaultLocalProvider = request.headers["x-default-local-provider"]
+    defaultCloudProvider = request.headers["x-default-cloud-provider"]
+
+    if useLocalProvider and useSnippetModel:
+        return RedirectResponse(f"/analyze_snippet_{defaultLocalProvider}")
+    elif useLocalProvider and not useSnippetModel:
+        return RedirectResponse(f"/analyze_code_{defaultLocalProvider}")
+    elif not useLocalProvider and useSnippetModel:
+        return RedirectResponse(f"/analyze_snippet_{defaultCloudProvider}")
+    elif not useLocalProvider and not useSnippetModel:
+        return RedirectResponse(f"/analyze_code_{defaultCloudProvider}")
+
+
+@app.post("/analyze_code_srvllama", tags=["Analysis"])
 async def analyze_code_endpoint_llama_server(request_data: CodeAnalysisRequest):
 
     user_content = f"CODE SNIPPET:\n---\n{request_data.code}\n---"
@@ -135,7 +153,7 @@ async def analyze_code_endpoint_llama_server(request_data: CodeAnalysisRequest):
     return StreamingResponse(generate_stream(), media_type="text/plain")
 
 
-@app.post("/analyze_snippet_llama_server", tags=["Analysis"])
+@app.post("/analyze_snippet_srvllama", tags=["Analysis"])
 async def analyze_snippet_llama_server_endpoint(request_data: CodeAnalysisRequest):
  
     full_prompt = f"{request_data.code}"
@@ -176,7 +194,6 @@ async def analyze_snippet_llama_server_endpoint(request_data: CodeAnalysisReques
 
                             try:
                                 data_json = json.loads(data_str)
-                                
                                 delta = data_json.get("choices", [{}])[0].get(
                                     "delta", {}
                                 )
@@ -196,8 +213,17 @@ async def analyze_snippet_llama_server_endpoint(request_data: CodeAnalysisReques
 
     return StreamingResponse(generate_stream(), media_type="text/plain")
 
-@app.post("/analyze_snippet", tags=["Analysis"])
-async def analyze_snippet_endpoint(request_data: CodeAnalysisRequest):
+@app.post("/analyze_snippet_ollama", tags=["Analysis"])
+async def analyze_snippet_endpoint(request_data: CodeAnalysisRequest, x_local_snippet_model: str | None = Header(default=None)):
+
+    model = x_local_snippet_model
+
+    if not model:
+        raise HTTPException(
+            status_code=400,
+            detail="No model provided"
+        )
+
     if client is None:
         raise HTTPException(
             status_code=503,
@@ -213,9 +239,8 @@ async def analyze_snippet_endpoint(request_data: CodeAnalysisRequest):
                     status_code=503,
                     detail="Ollama service is unavailable.",
                 )
-            
             stream = await client.generate(
-                model=MODEL_NAME_FOR_SNIPPETS, 
+                model=model, 
                 prompt=full_prompt, 
                 system=SYSTEM_PROMPT_FOR_SNIPPETS, 
                 stream=True
@@ -237,7 +262,7 @@ async def analyze_snippet_endpoint(request_data: CodeAnalysisRequest):
     )
 
 
-@app.post("/analyze_code", tags=["Analysis"])
+@app.post("/analyze_code_ollama", tags=["Analysis"])
 async def analyze_code_endpoint(request_data: CodeAnalysisRequest):
     if client is None:
         raise HTTPException(
@@ -278,8 +303,10 @@ async def analyze_code_endpoint(request_data: CodeAnalysisRequest):
     )
 
 
+@app.post("/analyze_snippet_gemini", tags=["Analysis"])
 @app.post("/analyze_code_gemini", tags=["Analysis"])
 async def analyze_code_endpoint_gemini(request_data: CodeAnalysisRequest):
+
     if gclient is None:
         raise HTTPException(
             status_code=503,

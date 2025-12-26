@@ -1,5 +1,6 @@
-const apiUrl = 'http://127.0.0.1:8000/analyze_code_llama_server';
-const apiSnippetUrl = 'http://127.0.0.1:8000/analyze_snippet_llama_server';
+import { getSettingsHeaders } from "./settings.js"
+
+const proxyUrl = 'http://127.0.0.1:8000/analyze';
 
 export async function callCodeAnalysisApi(codeSnippet, outputEle, firstTokenGeneratedErrands = () => { }, context = null) {
 
@@ -11,11 +12,15 @@ export async function callCodeAnalysisApi(codeSnippet, outputEle, firstTokenGene
 		context: context
 	};
 
+	const settingsHeaders = getSettingsHeaders()
+
 	try {
-		const response = await fetch(apiUrl, {
+		const response = await fetch(proxyUrl, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
+				'X-Use-Snippet-Model': false,
+				...settingsHeaders,
 			},
 			body: JSON.stringify(data),
 		});
@@ -83,21 +88,26 @@ export async function callSnippetAnalysisApi(codeSnippet, outputEle, firstTokenG
 	var score = 0;
 	let isFirstTokenGenerated = false;
 
+	const settingsHeaders = getSettingsHeaders()
+
 	const data = {
 		code: codeSnippet,
 		context: context
 	};
 
 	try {
-		const response = await fetch(apiSnippetUrl, {
+		const response = await fetch(proxyUrl, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
+				'X-Use-Snippet-Model': true,
+				...settingsHeaders,
 			},
 			body: JSON.stringify(data),
 		});
 
 		if (!response.ok) {
+			console.log("response not ok")
 			const errorText = await response.text();
 			throw new Error(`HTTP error! Status: ${response.status}. Details: ${errorText}`);
 		}
@@ -150,8 +160,7 @@ export async function callSnippetAnalysisApi(codeSnippet, outputEle, firstTokenG
 		return score;
 
 	} catch (error) {
-		console.error('API Call Error:', error);
-		return -1;
+		throw error;
 	}
 }
 

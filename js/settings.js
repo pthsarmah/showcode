@@ -17,7 +17,7 @@ let currentSettings = {
 		alignmentModel: '',
 		status: false,
 	},
-	llama: {
+	srvllama: {
 		url: 'http://localhost:8080',
 		snippetModel: '',
 		alignmentModel: '',
@@ -39,7 +39,7 @@ function loadSettings() {
 			...currentSettings,
 			...parsed,
 			ollama: { ...currentSettings.ollama, ...parsed.ollama },
-			llama: { ...currentSettings.llama, ...parsed.llama }
+			srvllama: { ...currentSettings.srvllama, ...parsed.srvllama }
 		};
 	}
 }
@@ -110,7 +110,7 @@ async function saveSettings() {
 
 	// 3. Local Providers (Always save these)
 	currentSettings.ollama.url = document.getElementById('ollama-url').value;
-	currentSettings.llama.url = document.getElementById('llama-url').value;
+	currentSettings.srvllama.url = document.getElementById('srvllama-url').value;
 
 	// Persist whatever valid state we have
 	localStorage.setItem(SETTINGS_KEY, JSON.stringify(currentSettings));
@@ -247,7 +247,7 @@ function renderSettings(container) {
                                 <span>Ollama</span>
                             </label>
                             <label class="model-radio-label">
-                                <input type="radio" name="defaultLocal" value="llama" ${currentSettings.defaultLocalProvider === 'llama' ? 'checked' : ''}>
+                                <input type="radio" name="defaultLocal" value="srvllama" ${currentSettings.defaultLocalProvider === 'srvllama' ? 'checked' : ''}>
                                 <span>llama-server</span>
                             </label>
                         </div>
@@ -404,7 +404,7 @@ function renderSettings(container) {
                 </div>
             </div>
 
-            <div class="settings-card" id="card-llama" data-provider="llama">
+            <div class="settings-card" id="card-srvllama" data-provider="srvllama">
                 <div class="settings-header">
                     <div class="settings-header-left">
                         <div class="settings-icon">
@@ -416,7 +416,7 @@ function renderSettings(container) {
                         </div>
                     </div>
                     <div class="accordion-controls">
-                        <span id="llama-status" class="status-badge default">Disconnected</span>
+                        <span id="srvllama-status" class="status-badge default">Disconnected</span>
                         <svg class="chevron-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                     </div>
                 </div>
@@ -424,18 +424,18 @@ function renderSettings(container) {
                     <div class="input-group">
                         <label class="input-label">Server URL</label>
                         <div class="input-wrapper">
-                            <input type="text" id="llama-url" class="settings-input" placeholder="http://localhost:8080" value="${currentSettings.llama.url}">
-                            <button class="btn-action" id="btn-check-llama">Connect</button>
+                            <input type="text" id="srvllama-url" class="settings-input" placeholder="http://localhost:8080" value="${currentSettings.srvllama.url}">
+                            <button class="btn-action" id="btn-check-srvllama">Connect</button>
                         </div>
                     </div>
-                    <div id="llama-models-area" class="model-selection-area">
+                    <div id="srvllama-models-area" class="model-selection-area">
                         <div class="radio-group-container">
                             <span class="radio-group-label">Snippet Analysis Model</span>
-                            <div class="radio-options" id="llama-snippet-options"></div>
+                            <div class="radio-options" id="srvllama-snippet-options"></div>
                         </div>
                         <div class="radio-group-container">
                             <span class="radio-group-label">Alignment Analysis Model</span>
-                            <div class="radio-options" id="llama-alignment-options"></div>
+                            <div class="radio-options" id="srvllama-alignment-options"></div>
                         </div>
                     </div>
                 </div>
@@ -449,7 +449,7 @@ function renderSettings(container) {
     `;
 
 	if (currentSettings.ollama.url) checkConnection('ollama', currentSettings.ollama.url, true);
-	if (currentSettings.llama.url) checkConnection('llama', currentSettings.llama.url, true);
+	if (currentSettings.srvllama.url) checkConnection('srvllama', currentSettings.srvllama.url, true);
 }
 
 function attachEventListeners() {
@@ -548,7 +548,7 @@ function attachEventListeners() {
 		}
 	};
 	setupConnect('ollama');
-	setupConnect('llama');
+	setupConnect('srvllama');
 
 	document.getElementById('btn-save-settings').addEventListener('click', saveSettings);
 }
@@ -585,7 +585,7 @@ async function checkConnection(type, url, silent = false) {
 
 		renderModelRadios(type, models);
 
-		const otherType = type === 'ollama' ? 'llama' : 'ollama';
+		const otherType = type === 'ollama' ? 'srvllama' : 'ollama';
 		const isDefaultProviderPresentAndThis = currentSettings.defaultLocalProvider && currentSettings.defaultLocalProvider === type
 
 		if (currentSettings[type].status && (isDefaultProviderPresentAndThis || !currentSettings[otherType].status)) {
@@ -657,8 +657,8 @@ function renderModelRadios(type, models) {
 
 export function getSettingsHeaders() {
 	const headers = {
-		'x-default-cloud-provider': currentSettings.defaultCloudProvider,
-		'x-default-local-provider': currentSettings.defaultLocalProvider
+		'X-Default-Cloud-Provider': currentSettings.defaultCloudProvider,
+		'X-Default-Local-Provider': currentSettings.defaultLocalProvider
 	};
 
 	// Only attach the key for the cloud provider currently set as default
@@ -671,21 +671,21 @@ export function getSettingsHeaders() {
 
 	const activeCloudKey = cloudKeyMap[currentSettings.defaultCloudProvider];
 	if (activeCloudKey && currentSettings[activeCloudKey]) {
-		headers['x-cloud-api-key'] = currentSettings[activeCloudKey]; // Use a generic header name
+		headers['X-Cloud-Api-Key'] = currentSettings[activeCloudKey]; // Use a generic header name
 	}
 
 	// Attach the active local provider URL
 	if (currentSettings.defaultLocalProvider === 'ollama') {
-		headers['x-local-url'] = currentSettings.ollama.url;
-		headers['x-local-snippet-model'] = currentSettings.ollama.snippetModel;
-		headers['x-local-alignment-model'] = currentSettings.ollama.alignmentModel;
-	} else if (currentSettings.defaultLocalProvider === 'llama') {
-		headers['x-local-url'] = currentSettings.llama.url;
-		headers['x-local-snippet-model'] = currentSettings.llama.snippetModel;
-		headers['x-local-alignment-model'] = currentSettings.llama.alignmentModel;
+		headers['X-Local-Url'] = currentSettings.ollama.url;
+		headers['X-Local-Snippet-Model'] = currentSettings.ollama.snippetModel;
+		headers['X-Local-Alignment-Model'] = currentSettings.ollama.alignmentModel;
+	} else if (currentSettings.defaultLocalProvider === 'srvllama') {
+		headers['X-Local-Url'] = currentSettings.srvllama.url;
+		headers['X-Local-Snippet-Model'] = currentSettings.srvllama.snippetModel;
+		headers['X-Local-Alignment-Model'] = currentSettings.srvllama.alignmentModel;
 	}
 
-	headers['x-use-local-provider'] = currentSettings.useLocalProvider;
+	headers['X-Use-Local-Provider'] = currentSettings.useLocalProvider;
 
 	return headers;
 }

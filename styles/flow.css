@@ -27,6 +27,23 @@
   }
 }
 
+.flow-controls {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  z-index: 10;
+  display: flex;
+  gap: 10px; /* Spacing between the two buttons */
+}
+
+/* Ensure the modal content is centered and looks good */
+#exportPreviewContainer {
+    background: #f8fafc;
+    padding: 10px;
+    display: flex;
+    justify-content: center;
+}
+
 .connections-layer {
   position: absolute;
   top: 0;

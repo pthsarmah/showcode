@@ -220,9 +220,6 @@ async function fetchAnalysis(codeSnippet, container) {
 	}
 }
 
-
-
-
 export async function openModal(snippet) {
 	const modal = document.getElementById('codeModal');
 	const title = document.getElementById('modalTitle');
