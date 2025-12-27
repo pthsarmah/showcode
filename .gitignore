@@ -1,4 +1,6 @@
 *.env
+*.pem
+
 dx-tools/
 marketing/
 showcode/

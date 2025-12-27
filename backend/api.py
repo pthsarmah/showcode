@@ -327,8 +327,6 @@ async def analyze_code_endpoint_gemini(request_data: CodeAnalysisRequest, settin
     if x_cloud_api_key and x_cloud_encrypted_key and x_cloud_iv:
         api_key = utils.decrypt_envelope(x_cloud_encrypted_key, x_cloud_iv, x_cloud_api_key, settings.RSA_PRIVATE_KEY)
 
-    print(api_key)
-
     try:
         gclient = genai.Client(api_key=api_key)
     except Exception as e:
@@ -383,9 +381,9 @@ async def analyze_code_endpoint_gemini(request_data: CodeAnalysisRequest, settin
     return StreamingResponse(generate_stream(), media_type="text/plain")
 
 @app.get("/.well-known/rsa-key", tags=["RSA public key"])
-async def get_rsa_public_key():
+async def get_rsa_public_key(settings: Annotated[config.Settings, Depends(get_settings)]):
     return FileResponse(
-        path="./public_key.pem",
+        path="./rsa_public.pem",
         status_code=200,
-        filename="public_key.pem"
+        filename="rsa_public.pem"
     )

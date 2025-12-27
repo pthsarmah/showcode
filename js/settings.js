@@ -615,6 +615,9 @@ function renderModelRadios(type, models) {
 
 	if (!snippetContainer || !alignContainer) return;
 
+	if (!models.includes(currentSettings[type]['snippetModel'])) currentSettings[type]['snippetModel'] = '';
+	if (!models.includes(currentSettings[type]['alignmentModel'])) currentSettings[type]['alignmentModel'] = '';
+
 	const createRadio = (modelName, category) => {
 		const label = document.createElement('label');
 		label.className = 'model-radio-label';
@@ -624,7 +627,11 @@ function renderModelRadios(type, models) {
 		input.name = `${type}-${category}`;
 		input.value = modelName;
 
-		if (currentSettings[type][`${category}Model`] === modelName) {
+		if (currentSettings[type][`${category}Model`] === '') {
+			input.checked = true;
+			currentSettings[type][`${category}Model`] = modelName;
+		}
+		else if (currentSettings[type][`${category}Model`] === modelName) {
 			input.checked = true;
 		}
 

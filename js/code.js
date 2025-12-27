@@ -92,8 +92,6 @@ export async function callSnippetAnalysisApi(codeSnippet, outputEle, firstTokenG
 
 	const settingsHeaders = getSettingsHeaders()
 
-	outputEle.innerHTML = '';
-
 	const data = {
 		code: codeSnippet,
 		context: context
