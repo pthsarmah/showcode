@@ -183,33 +183,42 @@
   background: var(--text-sub);
   border-radius: 50%;
   position: absolute;
-  transform: translateY(-50%);
+
+	--pos: translate(0, 0);
+	--hover: scale(1);
+
+	transform: var(--pos) var(--hover);
+
   border: 2px solid white;
   z-index: 10;
+}
+
+.handle:hover {
+	--hover: scale(3);
 }
 
 .handle.top {
   top: -5px;
   left: 50%;
-  transform: translateX(-50%);
+  --pos: translateX(-50%);
 }
 
 .handle.bottom {
   bottom: -10px;
   left: 50%;
-  transform: translateX(-50%);
+  --pos: translateX(-50%);
 }
 
 .handle.left {
   top: 50%;
   left: 0px;
-  transform: translate(-50%, -50%);
+  --pos: translate(-50%, -50%);
 }
 
 .handle.right {
   top: 50%;
   right: 0px;
-  transform: translate(50%, -50%);
+  --pos: translate(50%, -50%);
 }
 
 .flow-controls {

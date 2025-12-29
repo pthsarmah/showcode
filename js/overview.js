@@ -1,16 +1,18 @@
 import { openModal } from './main.js';
 
 export function renderOverview(container, dataArray) {
-    if (!dataArray || dataArray.length === 0) {
-        container.innerHTML = '<div style="padding:20px;">No data available.</div>';
-        return;
-    }
+	if (!dataArray || dataArray.length === 0) {
+		container.innerHTML = '<div style="padding:20px;">No data available.</div>';
+		return;
+	}
 
-    dataArray.forEach((section, idx) => {
-        const item = document.createElement('div');
-        item.className = 'accordion-item';
+	container.innerHTML = ``;
 
-        item.innerHTML = `
+	dataArray.forEach((section, idx) => {
+		const item = document.createElement('div');
+		item.className = 'accordion-item';
+
+		item.innerHTML = `
             <div class="accordion-header">
                 <div class="header-left">
                     <span class="header-title">${idx + 1}. ${section.title}</span>
@@ -27,32 +29,32 @@ export function renderOverview(container, dataArray) {
             </div>
         `;
 
-        const header = item.querySelector('.accordion-header');
-        const track = item.querySelector('.snippets-track');
+		const header = item.querySelector('.accordion-header');
+		const track = item.querySelector('.snippets-track');
 
-        header.addEventListener('click', () => { item.classList.toggle('active'); });
+		header.addEventListener('click', () => { item.classList.toggle('active'); });
 
-        if (section.snippets && section.snippets.length > 0) {
-            section.snippets.forEach((snippet, sIdx) => {
-                const block = document.createElement('div');
-                block.className = 'snippet-block-btn';
-                const displayTitle = snippet.label || `Snippet ${sIdx + 1}`;
-                
-                block.innerHTML = `
+		if (section.snippets && section.snippets.length > 0) {
+			section.snippets.forEach((snippet, sIdx) => {
+				const block = document.createElement('div');
+				block.className = 'snippet-block-btn';
+				const displayTitle = snippet.label || `Snippet ${sIdx + 1}`;
+
+				block.innerHTML = `
                     <div class="block-title">${displayTitle}</div>
                     <span class="header-file">${snippet.file}</span>
                     <div class="block-lang">${snippet.language}</div>
                 `;
-                
-                block.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    openModal(snippet);
-                });
-                track.appendChild(block);
-            });
-        } else {
-            track.innerHTML = `<div style="padding:10px; color:#999; font-style:italic">No snippets available.</div>`;
-        }
-        container.appendChild(item);
-    });
+
+				block.addEventListener('click', (e) => {
+					e.stopPropagation();
+					openModal(snippet);
+				});
+				track.appendChild(block);
+			});
+		} else {
+			track.innerHTML = `<div style="padding:10px; color:#999; font-style:italic">No snippets available.</div>`;
+		}
+		container.appendChild(item);
+	});
 }

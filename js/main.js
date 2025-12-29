@@ -2,44 +2,41 @@ import { initSettings } from './settings.js';
 import { renderOverview } from './overview.js';
 import { initFlow } from './flow.js';
 import { renderAlignmentView } from './alignment.js';
-import { callCodeAnalysisApi, callSnippetAnalysisApi } from './code.js';
+import { callSnippetAnalysisApi } from './code.js';
 
+let appData = null;
+let currentProjectIndex = localStorage.getItem("currentProjectIndex") || 0;
 
 document.addEventListener('DOMContentLoaded', async () => {
-	const appData = await fetchData();
-	if (appData) {
-		sessionStorage.setItem("flowData", JSON.stringify(appData.flow, null, 2));
+	appData = await fetchData();
 
-
-		const header = document.getElementById('header-container');
-		if (appData.project) {
-			header.innerHTML = `<h1 class="project-title">${appData.project}</h1>`;
-		}
-
-
-		renderOverview(document.getElementById('overview-view'), appData.data);
-		renderAlignmentView(document.getElementById('alignment-view'), appData.data);
+	if (appData && appData.collection && appData.collection.length > 0) {
+		const allFlows = appData.collection.map((p) => p.flow);
+		sessionStorage.setItem("flowData", JSON.stringify(allFlows));
 
 		initSettings(document.getElementById('settings-view'));
-
 		setupTabs();
-	} else {
-		document.body.innerHTML = `<h3 style="text-align:center; color:red; margin-top:50px;">Failed to load content.json</h3>`;
-	}
 
+		renderCarousel();
+
+		loadProject(parseInt(currentProjectIndex) || 0);
+
+	} else {
+		document.body.innerHTML = `<h3 style="text-align:center; color:red; margin-top:50px;">Failed to load content.json or empty collection</h3>`;
+	}
 
 	setupModal();
 	setupSelectionLogic();
 });
 
-
 const flowView = document.getElementById("flow-view");
 const observer = new MutationObserver((ml) => {
 	for (const mutation of ml) {
 		if (mutation.type == "attributes" && mutation.attributeName == "class" && mutation.target.classList.contains("active")) {
-			const flowData = JSON.parse(sessionStorage.getItem("flowData"));
-			if (flowData) initFlow(flowData);
-			sessionStorage.removeItem("flowData");
+			const allFlows = JSON.parse(sessionStorage.getItem("flowData"));
+			if (allFlows && allFlows[currentProjectIndex]) {
+				initFlow(allFlows[currentProjectIndex]);
+			}
 		}
 	}
 });
@@ -56,6 +53,61 @@ async function fetchData() {
 	}
 }
 
+function loadProject(index) {
+	if (!appData || !appData.collection[index]) return;
+
+	currentProjectIndex = index;
+	const projectData = appData.collection[index];
+
+	const header = document.getElementById('header-container');
+	if (projectData.project) {
+		header.innerHTML = `<h1 class="project-title">${projectData.project}</h1>`;
+	}
+
+	renderOverview(document.getElementById('overview-view'), projectData.data);
+	renderAlignmentView(document.getElementById('alignment-view'), projectData.data);
+
+	updateCarouselUI();
+
+	if (document.getElementById('flow-view').classList.contains('active')) {
+		const allFlows = JSON.parse(sessionStorage.getItem("flowData"));
+		if (allFlows && allFlows[index]) {
+			initFlow(allFlows[index]);
+		}
+	}
+}
+
+function renderCarousel() {
+	const container = document.getElementById('project-carousel');
+	container.innerHTML = '';
+
+	appData.collection.forEach((_, index) => {
+		const dot = document.createElement('div');
+		dot.className = 'carousel-dot';
+		dot.title = `Switch to Project ${index + 1}`;
+
+		dot.addEventListener('click', () => {
+			loadProject(index);
+			localStorage.setItem("currentProjectIndex", index);
+		});
+
+		container.appendChild(dot);
+	});
+
+	updateCarouselUI();
+}
+
+function updateCarouselUI() {
+	const dots = document.querySelectorAll('.carousel-dot');
+	dots.forEach((dot, idx) => {
+		if (idx === currentProjectIndex) {
+			dot.classList.add('active');
+		} else {
+			dot.classList.remove('active');
+		}
+	});
+}
+
 function setupTabs() {
 	const tabs = document.querySelectorAll('.tab-btn, .settings-btn');
 	tabs.forEach(btn => {
@@ -63,6 +115,10 @@ function setupTabs() {
 			const target = btn.dataset.tab;
 			tabs.forEach(t => t.classList.remove('active'));
 			btn.classList.add('active');
+
+			const carousel = document.getElementById("project-carousel");
+			carousel.style.opacity = target === "settings" ? 0 : 1;
+
 			document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
 			document.getElementById(`${target}-view`).classList.add('active');
 		});
@@ -84,26 +140,17 @@ function setupModal() {
 	document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
 }
 
-
-
 let selectionBtn = null;
 
 function setupSelectionLogic() {
-
 	selectionBtn = document.createElement('button');
 	selectionBtn.id = 'selection-popup-btn';
 	selectionBtn.textContent = 'Analyse Snippet';
 	document.body.appendChild(selectionBtn);
 
-
 	const modalBody = document.getElementById('modalBody');
-
-
 	modalBody.addEventListener('mouseup', handleSelection);
-
-
 	modalBody.addEventListener('keyup', handleSelection);
-
 
 	document.addEventListener('mousedown', (e) => {
 		if (e.target !== selectionBtn) {
@@ -111,18 +158,15 @@ function setupSelectionLogic() {
 		}
 	});
 
-
 	selectionBtn.addEventListener('click', (e) => {
 		e.stopPropagation();
 		const selection = window.getSelection();
 		const selectedText = selection.toString();
 
 		if (selectedText) {
-
 			const rect = selectionBtn.getBoundingClientRect();
 			createFloatingWindow(selectedText, rect.left, rect.top);
 			hideSelectionButton();
-
 			selection.removeAllRanges();
 		}
 	});
@@ -133,12 +177,9 @@ function handleSelection() {
 	const text = selection.toString().trim();
 	const modalBody = document.getElementById('modalBody');
 
-
 	if (text.length > 0 && modalBody.contains(selection.anchorNode)) {
 		const range = selection.getRangeAt(0);
 		const rect = range.getBoundingClientRect();
-
-
 
 		const btnHeight = 40;
 		const btnWidth = 140;
@@ -156,7 +197,6 @@ function hideSelectionButton() {
 }
 
 function createFloatingWindow(selectedText, startX, startY) {
-
 	const win = document.createElement('div');
 	win.className = 'floating-analysis-window';
 	win.style.left = `${startX}px`;
@@ -180,11 +220,9 @@ function createFloatingWindow(selectedText, startX, startY) {
 
 	document.body.appendChild(win);
 
-
 	win.querySelector('.floating-close-btn').addEventListener('click', () => {
 		win.remove();
 	});
-
 
 	const header = win.querySelector('.floating-header');
 	let isDragging = false;
@@ -208,7 +246,6 @@ function createFloatingWindow(selectedText, startX, startY) {
 		header.style.cursor = 'move';
 	});
 
-
 	fetchAnalysis(selectedText, win.querySelector('.floating-content'));
 }
 
@@ -216,6 +253,7 @@ async function fetchAnalysis(codeSnippet, container) {
 	try {
 		await callSnippetAnalysisApi(codeSnippet, container);
 	} catch (err) {
+		console.log(err);
 		container.innerHTML = `<div style="color:red; padding:10px;">Error generating analysis.</div>`;
 	}
 }
@@ -229,10 +267,19 @@ export async function openModal(snippet) {
 	modal.classList.add('open');
 	body.innerHTML = `<div class="loading-text">Fetching ${snippet.file}...</div>`;
 
+	function trimLines(code, startLine, endLine) {
+		const lines = code.split(/\r?\n/); // handles \n and \r\n
+		return lines.slice(startLine - 1, endLine).join('\n');
+	}
+
 	try {
 		const res = await fetch(snippet.repoUrl);
 		if (!res.ok) throw new Error('Network error');
-		const rawCode = await res.text();
+		var rawCode = await res.text();
+
+		if (snippet.lineStart && snippet.lineEnd) {
+			rawCode = trimLines(rawCode, snippet.lineStart, snippet.lineEnd);
+		}
 
 		const markdownString = "```" + snippet.language + "\n" + rawCode + "\n```";
 		const parsedHtml = marked.parse(markdownString);
@@ -240,7 +287,7 @@ export async function openModal(snippet) {
 		body.innerHTML = `
             <div class="snippet-view-meta">
                 <div class="meta-left">
-                    <span>${snippet.file}</span>
+                    <span>${snippet.file} ${snippet.lineStart && snippet.lineEnd ? `(Lines ${snippet.lineStart}-${snippet.lineEnd})` : ``}</span>
                     <a target="_blank" class="snippet-github-link" href="${snippet.githubFileUrl}">
                         <i class="devicon-github-original"></i> GitHub
                     </a>

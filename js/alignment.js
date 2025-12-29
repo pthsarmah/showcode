@@ -6,6 +6,8 @@ export function renderAlignmentView(container, dataArray) {
 		return;
 	}
 
+	container.innerHTML = ``;
+
 	dataArray.forEach((section, idx) => {
 		const item = document.createElement('div');
 		item.className = 'alignment-accordion-item';
@@ -78,6 +80,11 @@ export function renderAlignmentView(container, dataArray) {
 					}
 				});
 
+				function trimLines(code, startLine, endLine) {
+					const lines = code.split(/\r?\n/); // handles \n and \r\n
+					return lines.slice(startLine - 1, endLine).join('\n');
+				}
+
 				btn.addEventListener('click', async (e) => {
 					e.stopPropagation();
 
@@ -88,7 +95,12 @@ export function renderAlignmentView(container, dataArray) {
 					try {
 						const res = await fetch(snippet.repoUrl);
 						if (!res.ok) throw new Error('Network error');
-						const rawCode = await res.text();
+						var rawCode = await res.text();
+
+						if (snippet.lineStart && snippet.lineEnd) {
+							rawCode = trimLines(rawCode, snippet.lineStart, snippet.lineEnd);
+						}
+
 						const score = await callCodeAnalysisApi(rawCode, outputDiv, () => {
 							wrapper.classList.toggle('open');
 						});

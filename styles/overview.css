@@ -71,6 +71,7 @@
 
 .snippet-block-btn {
     height: 110px;
+		min-width: 17%;
     background: #fff;
     border: 1px solid var(--border);
     border-radius: 8px;

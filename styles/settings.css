@@ -24,7 +24,6 @@
 }
 
 .settings-card.open {
-    border-color: var(--primary);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
@@ -106,7 +105,6 @@
     padding: 0 24px;
     max-height: 0;
     overflow: hidden;
-    opacity: 0;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     background: #fdfdfd;
     border-top: 1px solid transparent;
@@ -115,7 +113,6 @@
 .settings-card.open .settings-body {
     padding: 24px; /* Restore padding when open */
     max-height: 1000px; /* Arbitrary large height */
-    opacity: 1;
     border-top-color: var(--border);
 }
 

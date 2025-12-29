@@ -2,15 +2,14 @@ import { encryptWithPublicKey } from './encryption.js';
 
 const SETTINGS_KEY = 'showcode_app_settings';
 
-// Default state including new providers and default selections
 let currentSettings = {
 	geminiEncrypted: {},
 	openaiEncrypted: {},
 	anthropicEncrypted: {},
 	grokEncrypted: {},
 	useLocalProvider: true,
-	defaultCloudProvider: 'gemini', // Default selection
-	defaultLocalProvider: 'ollama', // Default selection
+	defaultCloudProvider: 'gemini',
+	defaultLocalProvider: 'ollama',
 	ollama: {
 		url: 'http://localhost:11434',
 		snippetModel: '',

@@ -171,28 +171,105 @@ function drawEdges() {
 		return right[0] * dir[0] + right[1] * dir[1];
 	}
 
+	const calculateControlDist = (startX, startY, endX, endY, orientation) => {
+		const dx = Math.abs(endX - startX);
+		const dy = Math.abs(endY - startY);
+
+		const minLoft = 50;
+
+		if (orientation === "horizontal") {
+			return Math.max(dx / 2, minLoft);
+		} else if (orientation === "vertical") {
+			return Math.max(dy / 2, minLoft);
+		} else {
+			return Math.max(Math.sqrt(dx * dx + dy * dy) / 4, minLoft);
+		}
+	};
+
+	const setEndpointsForHandle = (sNode, tNode, startHandle, endHandle, dot) => {
+
+		const sWidth = getElWidth(sNode.id);
+		const sHeight = getElHeight(sNode.id);
+		const tWidth = getElWidth(tNode.id);
+		const tHeight = getElHeight(tNode.id);
+
+		if (!startHandle && !endHandle) {
+			const threshold = sHeight + 10;
+			const sourceNodeRelPosY = sNode.y > tNode.y + threshold ? "bottom" : sNode.y < tNode.y - threshold ? "top" : "center";
+			const sourceNodeRelPosX = (sNode.x + sWidth / 2) > (tNode.x + tWidth / 2) ? "right" : (sNode.x + sWidth / 2) < (tNode.x + tWidth / 2) ? "left" : "center";
+
+			if (sourceNodeRelPosX === "center" && sourceNodeRelPosY === "center") {
+				startHandle = "right";
+				endHandle = "left";
+			}
+
+			else if (sourceNodeRelPosX === "center") {
+				if (sourceNodeRelPosY === "top") {
+					startHandle = "bottom"; // Source is above, exit from bottom
+					endHandle = "top";      // Target is below, enter from top
+				} else {
+					startHandle = "right";    // Source is below, exit from top
+					endHandle = "right";   // Target is above, enter from bottom
+				}
+			}
+
+			else if (sourceNodeRelPosY === "center") {
+				if (sourceNodeRelPosX === "left") {
+					startHandle = "right";  // Source is left, exit from right
+					endHandle = "left";     // Target is right, enter from left
+				} else {
+					startHandle = "bottom";   // Source is right, exit from left
+					endHandle = "bottom";    // Target is left, enter from right
+				}
+			}
+
+			else {
+				startHandle = sourceNodeRelPosX === "left" ? "right" : "left";
+				endHandle = sourceNodeRelPosY === "top" ? "top" : "bottom";
+			}
+		}
+
+		const handleMap = {
+			top: (node, w, h) => ({ x: node.x + w / 2, y: node.y, dx: 0, dy: -1 }),
+			bottom: (node, w, h) => ({ x: node.x + w / 2, y: node.y + h, dx: 0, dy: 1 }),
+			left: (node, w, h) => ({ x: node.x, y: node.y + h / 2, dx: -1, dy: 0 }),
+			right: (node, w, h) => ({ x: node.x + w, y: node.y + h / 2, dx: 1, dy: 0 })
+		};
+
+		const startConf = (handleMap[startHandle] || handleMap.top)(sNode, sWidth, sHeight);
+		const endConf = (handleMap[endHandle] || handleMap.top)(tNode, tWidth, tHeight);
+
+		const { x: startX, y: startY } = startConf;
+		const { x: endX, y: endY } = endConf;
+
+		const isH = dot > 0;
+		const orientation = isH ? "horizontal" : "vertical";
+
+		const controlDist = calculateControlDist(startX, startY, endX, endY, orientation);
+
+		const cp1x = startX + (startConf.dx * controlDist);
+		const cp1y = startY + (startConf.dy * controlDist);
+		const cp2x = endX + (endConf.dx * controlDist);
+		const cp2y = endY + (endConf.dy * controlDist);
+
+		const path = `M ${startX} ${startY} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${endX} ${endY}`;
+
+		return { startX, startY, endX, endY, d: path };
+	};
+
 	flowState.edges.forEach(edge => {
 		const sNode = flowState.nodes.find(n => n.id === edge.from);
 		const tNode = flowState.nodes.find(n => n.id === edge.to);
 
-		if (sNode && tNode) {
-			const sHeight = getElHeight(sNode.id);
-			const sWidth = getElWidth(sNode.id);
-			const tWidth = getElWidth(tNode.id);
-			const tHeight = getElHeight(tNode.id);
+		const startHandle = edge.handleStart;
+		const endHandle = edge.handleEnd;
 
+		if (sNode && tNode) {
 			const dot = getDirection(sNode, tNode);
 
-			const startX = dot <= 0 ? sNode.x + sWidth / 2 : sNode.x + sWidth;
-			const startY = dot <= 0 ? sNode.y + sHeight : sNode.y + (sHeight / 2);
-			const endX = dot <= 0 ? tNode.x + tWidth / 2 : tNode.x;
-			const endY = dot <= 0 ? tNode.y : tNode.y + (tHeight / 2);
+			var startX, startY, endX, endY = 0, d = "";
 
-			const controlDist = dot <= 0 ? Math.abs(endY - startY) / 2 : Math.abs(endX - startX) / 2;
-
-			const d = dot <= 0
-				? `M ${startX} ${startY} C ${startX} ${startY + controlDist}, ${endX} ${endY - controlDist}, ${endX} ${endY}`
-				: `M ${startX} ${startY} C ${startX + controlDist} ${startY}, ${endX - controlDist} ${endY}, ${endX} ${endY}`;
+			({ startX, startY, endX, endY, d } = setEndpointsForHandle(sNode, tNode, startHandle, endHandle, dot));
 
 			const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
 			path.setAttribute("d", d);
@@ -470,7 +547,19 @@ async function saveFlowLayout() {
 		if (!response.ok) throw new Error('Failed to fetch content.json');
 
 		const contentJson = await response.json();
-		contentJson.flow = newFlowData;
+		const currentTitle = document.querySelector('.project-title')?.textContent;
+
+		if (contentJson.collection && Array.isArray(contentJson.collection)) {
+			const projectIndex = localStorage.getItem("currentProjectIndex") || contentJson.collection.findIndex(p => p.project === currentTitle);
+			if (projectIndex !== -1) {
+				contentJson.collection[projectIndex].flow = newFlowData;
+			} else {
+				console.warn(`Project "${currentTitle}" not found. Saving to collection[0].`);
+				contentJson.collection[0].flow = newFlowData;
+			}
+		} else {
+			throw new Error("Invalid content.json structure: 'collection' array missing.");
+		}
 
 		const blob = new Blob([JSON.stringify(contentJson, null, 2)], { type: 'application/json' });
 		const url = URL.createObjectURL(blob);
