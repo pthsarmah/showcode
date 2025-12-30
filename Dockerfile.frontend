@@ -1,0 +1,15 @@
+FROM nginx:alpine
+
+RUN rm -rf /usr/share/nginx/html/*
+
+# Copy static assets from project root
+COPY index.html landing.html content.json /usr/share/nginx/html/
+COPY assets/ /usr/share/nginx/html/assets/
+COPY js/ /usr/share/nginx/html/js/
+COPY styles/ /usr/share/nginx/html/styles/
+
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 3000
+
+CMD ["nginx", "-g", "daemon off;"]

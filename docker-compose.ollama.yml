@@ -1,0 +1,25 @@
+services:
+  ollama:
+    image: ollama/ollama:0.13.5
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    networks:
+      - app-network
+    volumes:
+      - ollama:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+volumes:
+  ollama:
+
+networks:
+  app-network:
+    external: true
+
