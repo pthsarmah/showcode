@@ -1,5 +1,5 @@
 import logging
-import config
+import backend.config as config
 import base64
 
 from functools import lru_cache

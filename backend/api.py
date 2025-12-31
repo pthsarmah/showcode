@@ -1,8 +1,8 @@
 import json
 import logging
 import httpx
-import utils
-import config
+import backend.utils as utils
+import backend.config as config
 import ollama
 
 from functools import lru_cache
@@ -12,13 +12,15 @@ from fastapi import Depends, FastAPI, HTTPException, Header, Request
 from fastapi.responses import FileResponse, RedirectResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
+from backend.dependencies import get_llama_streamer
+
 from google import genai
 from google.genai.errors import APIError
 from openai import OpenAI, APIError
 from anthropic import Anthropic, APIError as AnthropicAPIError
 
 from fastapi.middleware.cors import CORSMiddleware
-from constants import SYSTEM_PROMPT, SYSTEM_PROMPT_FOR_SNIPPETS
+from backend.constants import SYSTEM_PROMPT, SYSTEM_PROMPT_FOR_SNIPPETS
 
 @lru_cache
 def get_settings():
@@ -158,69 +160,29 @@ async def analyze_code_endpoint_llama_server(request_data: CodeAnalysisRequest, 
 
 
 @app.post("/analyze_snippet_srvllama", tags=["Analysis"])
-async def analyze_snippet_llama_server_endpoint(request_data: CodeAnalysisRequest, settings: Annotated[config.Settings, Depends(get_settings)], x_local_snippet_model: str | None = Header(default=None)):
+async def analyze_snippet_llama_server_endpoint(
+    request_data: CodeAnalysisRequest,
+    settings: Annotated[config.Settings, Depends(get_settings)],
+    llama_streamer = Depends(get_llama_streamer),
+    x_local_snippet_model: str | None = Header(default=None),
+):
 
     if not x_local_snippet_model:
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid model name"
-        )
-        
- 
-    full_prompt = f"{request_data.code}"
-
-    messages = [
-        {"role": "system", "content": SYSTEM_PROMPT_FOR_SNIPPETS},
-        {"role": "user", "content": full_prompt},
-    ]
+        raise HTTPException(status_code=400, detail="Invalid model name")
 
     payload = {
         "model": x_local_snippet_model,
-        "messages": messages,
+        "messages": [
+            {"role": "system", "content": SYSTEM_PROMPT_FOR_SNIPPETS},
+            {"role": "user", "content": request_data.code},
+        ],
         "stream": True,
         "temperature": 0.5,
     }
 
     async def generate_stream() -> AsyncGenerator[str, None]:
-        async with httpx.AsyncClient(timeout=None) as client:
-            try:
-                async with client.stream(
-                    "POST", settings.LLAMA_SERVER_URL, json=payload
-                ) as response:
-
-                    if response.status_code != 200:
-                        error_msg = await response.aread()
-                        logging.error(f"Llama Server Error: {error_msg.decode()}")
-                        raise HTTPException(
-                            status_code=response.status_code,
-                            detail=f"Llama server returned error: {response.status_code}",
-                        )
-
-                    async for line in response.aiter_lines():
-                        if line.startswith("data: "):
-                            data_str = line[6:]  
-
-                            if data_str.strip() == "[DONE]":
-                                break
-
-                            try:
-                                data_json = json.loads(data_str)
-                                delta = data_json.get("choices", [{}])[0].get(
-                                    "delta", {}
-                                )
-                                content = delta.get("content", "")
-
-                                if content:
-                                    yield content
-                            except json.JSONDecodeError:
-                                logging.warning(f"Failed to parse JSON line: {line}")
-                                continue
-
-            except httpx.ConnectError:
-                yield "\n[SERVER_ERROR] Could not connect to llama-server at localhost:8080. Is it running?"
-            except Exception as e:
-                logging.error(f"An unexpected error occurred: {e}")
-                yield f"\n[SERVER_ERROR] An unexpected error occurred: {str(e)}"
+        async for chunk in llama_streamer(settings.LLAMA_SERVER_URL, payload):
+            yield chunk
 
     return StreamingResponse(generate_stream(), media_type="text/plain")
 

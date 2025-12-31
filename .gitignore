@@ -3,5 +3,7 @@
 
 dx-tools/
 marketing/
+models/
 showcode/
-__pycache__
+.pytest_cache/
+__pycache__/
