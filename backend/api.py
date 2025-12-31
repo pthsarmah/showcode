@@ -1,6 +1,7 @@
 import json
 import logging
 import httpx
+from backend.generators import anthtropic_stream
 import backend.utils as utils
 import backend.config as config
 import ollama
@@ -12,12 +13,12 @@ from fastapi import Depends, FastAPI, HTTPException, Header, Request
 from fastapi.responses import FileResponse, RedirectResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
-from backend.dependencies import get_llama_streamer
+from backend.dependencies import get_llama_streamer, get_ollama_streamer
 
 from google import genai
 from google.genai.errors import APIError
 from openai import OpenAI, APIError
-from anthropic import Anthropic, APIError as AnthropicAPIError
+from anthropic import Anthropic 
 
 from fastapi.middleware.cors import CORSMiddleware
 from backend.constants import SYSTEM_PROMPT, SYSTEM_PROMPT_FOR_SNIPPETS
@@ -138,7 +139,6 @@ async def analyze_code_endpoint_llama_server(request_data: CodeAnalysisRequest, 
 
                             try:
                                 data_json = json.loads(data_str)
-                                
                                 delta = data_json.get("choices", [{}])[0].get(
                                     "delta", {}
                                 )
@@ -187,7 +187,7 @@ async def analyze_snippet_llama_server_endpoint(
     return StreamingResponse(generate_stream(), media_type="text/plain")
 
 @app.post("/analyze_snippet_ollama", tags=["Analysis"])
-async def analyze_snippet_endpoint(request_data: CodeAnalysisRequest, x_local_snippet_model: str | None = Header(default=None)):
+async def analyze_snippet_endpoint(request_data: CodeAnalysisRequest, ollama_streamer = Depends(get_ollama_streamer), x_local_snippet_model: str | None = Header(default=None)):
 
     model = x_local_snippet_model
 
@@ -206,29 +206,8 @@ async def analyze_snippet_endpoint(request_data: CodeAnalysisRequest, x_local_sn
     full_prompt = f"{request_data.code}"
     
     async def generate_stream() -> AsyncGenerator[str, None]:
-        try:
-            if client is None:
-                raise HTTPException(
-                    status_code=503,
-                    detail="Ollama service is unavailable.",
-                )
-            stream = await client.generate(
-                model=model, 
-                prompt=full_prompt, 
-                system=SYSTEM_PROMPT_FOR_SNIPPETS, 
-                stream=True
-            )
-
-            async for chunk in stream:
-                response_text = chunk.get("response", "")
-                if response_text:
-                    
-                    
-                    yield response_text
-                    
-        except Exception as e:
-            logging.error(f"An unexpected error occurred: {e}")
-            yield f"\n[SERVER_ERROR] An unexpected error occurred: {e}"
+         async for chunk in ollama_streamer(client, full_prompt, model):
+            yield chunk
 
     return StreamingResponse(
         generate_stream(), media_type="text/plain" 
@@ -271,8 +250,6 @@ async def analyze_code_endpoint(request_data: CodeAnalysisRequest, x_local_align
             async for chunk in stream:
                 response_text = chunk.get("response", "")
                 if response_text:
-                    
-                    
                     yield response_text
                     
         except Exception as e:
@@ -293,8 +270,13 @@ async def analyze_code_endpoint_gemini(request_data: CodeAnalysisRequest, settin
                                        x_cloud_iv: str | None = Header(default=None)):
 
     api_key = ""
-    if x_cloud_api_key and x_cloud_encrypted_key and x_cloud_iv:
+    if x_cloud_api_key and x_cloud_encrypted_key and x_cloud_iv and x_use_snippet_model:
         api_key = utils.decrypt_envelope(x_cloud_encrypted_key, x_cloud_iv, x_cloud_api_key, settings.RSA_PRIVATE_KEY)
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail="Headers missing",
+        )
 
     try:
         gclient = genai.Client(api_key=api_key)
@@ -487,7 +469,6 @@ async def analyze_code_endpoint_claude(request_data: CodeAnalysisRequest, settin
 
     client = None
     try:
-        # Initialize Anthropic Client
         client = Anthropic(api_key=api_key)
     except Exception as e:
         logging.error(f"Failed to initialize Claude client: {e}")
@@ -496,7 +477,6 @@ async def analyze_code_endpoint_claude(request_data: CodeAnalysisRequest, settin
     isSnippet = True if x_use_snippet_model == 'true' else False
     systemPrompt = SYSTEM_PROMPT_FOR_SNIPPETS if isSnippet else SYSTEM_PROMPT
     
-    # Select appropriate model (Haiku for speed/snippets, Sonnet for complex code)
     model_name = "claude-3-haiku-20240307" if isSnippet else "claude-3-5-sonnet-20240620"
 
     if client is None:
@@ -510,24 +490,8 @@ async def analyze_code_endpoint_claude(request_data: CodeAnalysisRequest, settin
         user_content += f"\nADDITIONAL CONTEXT:\n---\n{request_data.context}\n---"
 
     async def generate_stream() -> AsyncGenerator[str, None]:
-        try:
-            with client.messages.stream(
-                max_tokens=4096,
-                system=systemPrompt,
-                messages=[
-                    {"role": "user", "content": user_content}
-                ],
-                model=model_name,
-            ) as stream:
-                for text in stream.text_stream:
-                    yield text
-
-        except AnthropicAPIError as e:
-            logging.error(f"Claude API Error: {e}")
-            yield f"\n[API_ERROR] Claude API Error: {e}"
-        except Exception as e:
-            logging.error(f"An unexpected server error occurred: {e}")
-            yield f"\n[SERVER_ERROR] An unexpected error occurred: {e}"
+         async for chunk in anthtropic_stream(client, systemPrompt, user_content, model_name):
+            yield chunk
 
     return StreamingResponse(generate_stream(), media_type="text/plain")
 
