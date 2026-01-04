@@ -62,6 +62,8 @@
 
 .accordion-inner {
     min-height: 0;
+		overflow-x: hidden;
+		scrollbar-color: "red";
 	  background: #f8fafc;
 }
 
@@ -70,11 +72,12 @@
     display: flex;
     gap: 15px;
     overflow-x: auto;
+		scrollbar-color: var(--primary);
 }
 
 .snippet-block-btn {
     height: 110px;
-		min-width: 17%;
+		min-width: 200px;
     background: #fff;
     border: 1px solid var(--border);
     border-radius: 8px;

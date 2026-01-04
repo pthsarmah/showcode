@@ -60,18 +60,20 @@
 }
 
 .alignment-accordion-content {
-	max-height: 0;
-	overflow: hidden;
-	transition: max-height 0.3s ease-out;
-	background: #f8fafc;
-	border-top: 1px solid transparent;
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.3s ease-out;
+    overflow: hidden;
+    background: #f8fafc;
 }
 
 .alignment-accordion-item.active .alignment-accordion-content {
-	max-height: 1000px;
-	
-	border-top-color: var(--border);
-	transition: max-height 0.5s ease-in;
+    grid-template-rows: 1fr;
+}
+
+.alignment-accordion-inner {
+    min-height: 0;
+	  background: #f8fafc;
 }
 
 .alignment-snippets-track {
