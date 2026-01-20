@@ -9,13 +9,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY backend/ .
+COPY . .
 
-# Ensure the public key exists or is generated (optional, handled by app usually)
-# For now, we assume the app generates keys or they are mounted
-
-# Expose the port uvicorn runs on
 EXPOSE 8000
 
-# Command to run the application
-CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "backend.api:app", "--host", "0.0.0.0"]
