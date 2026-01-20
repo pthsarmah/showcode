@@ -8,11 +8,13 @@ services:
     volumes:
       - ./rsa_public.pem:/app/rsa_public.pem
     networks:
-      - app-network
+      - showcode
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.backend.rule=Host(`showcode.parthajeet.xyz`) && (PathPrefix(`/analyze`) || PathPrefix(`/.well-known`))"
       - "traefik.http.services.backend.loadbalancer.server.port=8000"
+      - "traefik.http.routers.backend.entrypoints=websecure"
+      - "traefik.http.routers.backend.tls.certresolver=tuberesolver"
 
   frontend:
     build:
@@ -22,13 +24,16 @@ services:
     depends_on:
       - backend
     networks:
-      - app-network
+      - showcode
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.frontend.rule=Host(`showcode.parthajeet.xyz`)"
       - "traefik.http.services.frontend.loadbalancer.server.port=3000"
+      - "traefik.http.routers.frontend.entrypoints=websecure"
+      - "traefik.http.routers.frontend.tls.certresolver=tuberesolver"
 
 networks:
-  app-network:
+  showcode:
     external: true
     driver: bridge
+
